@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Waylight</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="topbar">
+      <button
+        class="pane-toggle"
+        id="toggle-tree"
+        aria-label="Visa projektträd"
+        title="Visa projektträd">
+        ☰
+      </button>
+      <div class="brand"><span class="glyph">◈</span> Waylight</div>
+      <div class="project-name" id="project-name">Inget projekt inläst</div>
+      <div class="spacer"></div>
+      <div class="status-pill" id="status-pill">läser in…</div>
+      <button class="refresh-btn" id="refresh-btn" title="Uppdatera från GitHub">⟳</button>
+      <button
+        class="refresh-btn"
+        id="undo-btn"
+        title="Ångra (öppna senast stängda flik) — Ctrl+Z"
+        disabled>
+        ↺
+      </button>
+      <button
+        class="pane-toggle"
+        id="toggle-page-search"
+        aria-label="Sök på sidan"
+        title="Sök på sidan">
+        🔍
+      </button>
+      <button class="pane-toggle" id="toggle-links" aria-label="Visa länkar" title="Visa länkar">
+        ⚭
+      </button>
+    </div>
+
+    <div class="layout">
+      <div class="pane-scrim" id="pane-scrim"></div>
+      <div class="tree-pane" id="tree-pane"></div>
+
+      <div class="content-pane">
+        <div class="tabbar-row">
+          <div class="tabbar" id="tabbar"></div>
+        </div>
+        <div class="page-search-wrap" id="page-search-wrap">
+          <div class="search-input-group">
+            <input
+              type="text"
+              id="page-search"
+              class="page-search"
+              placeholder="Sök på sidan…"
+              autocomplete="off" />
+            <button
+              class="search-clear-btn"
+              id="page-search-clear"
+              title="Rensa sökning"
+              aria-label="Rensa sökning">
+              ✕
+            </button>
+          </div>
+          <span class="page-search-count" id="page-search-count"></span>
+          <button class="page-search-nav" id="page-search-prev" title="Föregående träff">↑</button>
+          <button class="page-search-nav" id="page-search-next" title="Nästa träff">↓</button>
+        </div>
+        <div class="content-scroll" id="content-scroll"></div>
+      </div>
+
+      <div class="link-pane" id="link-pane"></div>
+    </div>
+
+    <script src="scripts/state.js"></script>
+    <script src="scripts/github.js"></script>
+    <script src="scripts/markdown.js"></script>
+    <script src="scripts/tree.js"></script>
+    <script src="scripts/tabs.js"></script>
+    <script src="scripts/content.js"></script>
+    <script src="scripts/page-search.js"></script>
+    <script src="scripts/link-pane.js"></script>
+    <script src="scripts/responsive.js"></script>
+    <script src="scripts/init.js"></script>
+  </body>
+</html>

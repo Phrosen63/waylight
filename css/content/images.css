@@ -1,0 +1,9 @@
+.doc-body img.doc-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 8px 0 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+}

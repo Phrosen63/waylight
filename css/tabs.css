@@ -1,0 +1,172 @@
+.content-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tabbar-row {
+  display: flex;
+  align-items: flex-end;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.tabbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 10px 12px 0;
+  overflow-x: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.page-search-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.page-search {
+  width: 220px;
+  padding: 5px 26px 5px 9px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color 0.12s;
+}
+
+.page-search:focus {
+  border-color: var(--accent-dim);
+}
+
+.page-search::placeholder {
+  color: var(--text-faint);
+}
+
+.page-search-count {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  min-width: 38px;
+  text-align: center;
+}
+
+.page-search-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-faint);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.page-search-nav:hover {
+  background: var(--surface-hover);
+  color: var(--text-dim);
+}
+
+.page-search-nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (max-width: 900px) {
+  .page-search-wrap {
+    display: none;
+  }
+
+  .page-search-wrap.open {
+    display: flex;
+  }
+
+  .page-search {
+    flex: 1;
+    width: auto;
+  }
+
+  .page-search-wrap .search-input-group {
+    flex: 1;
+  }
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 9px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  color: var(--text-faint);
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  top: 1px;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+
+.tab::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.tab:hover {
+  color: var(--text-dim);
+  background: var(--surface-hover);
+}
+
+.tab.active {
+  background: var(--surface);
+  color: var(--accent);
+  border-color: var(--border);
+  border-bottom: 1px solid var(--surface);
+  margin-bottom: -1px;
+  padding-bottom: 10px;
+}
+
+.tab.active::before {
+  opacity: 1;
+}
+
+.tab .tab-close {
+  opacity: 0.5;
+  font-size: 13px;
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
+.tab .tab-close:hover {
+  opacity: 1;
+  background: var(--danger);
+  color: var(--text);
+}

@@ -1,0 +1,48 @@
+.doc-toc {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin: 0 0 30px;
+}
+
+.doc-toc-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  margin-bottom: 8px;
+}
+
+.doc-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 2;
+  column-gap: 24px;
+}
+
+.doc-toc-list li {
+  margin-bottom: 5px;
+  break-inside: avoid;
+}
+
+.doc-toc-list a.toc-link {
+  color: var(--link);
+  text-decoration: none;
+  border-bottom: none;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.doc-toc-list a.toc-link:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+@media (max-width: 620px) {
+  .doc-toc-list {
+    columns: 1;
+  }
+}
