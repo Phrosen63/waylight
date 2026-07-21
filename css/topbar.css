@@ -88,7 +88,11 @@
   transform: none;
 }
 
-/* ----- Mobile pane-toggle buttons ----- */
+#lock-btn.unlocked {
+  border-color: var(--link);
+  color: var(--link);
+}
+
 .pane-toggle {
   display: none;
   align-items: center;

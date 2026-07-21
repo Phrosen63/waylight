@@ -41,12 +41,7 @@ function renderLinkPane() {
       if (!Array.isArray(keys) || keys.length === 0) continue;
       linksHtml += `<div class="link-group"><div class="link-group-label">${category}</div>`;
       keys.forEach((key) => {
-        const resolved = resolveLink(key, state.activePath);
-        if (resolved) {
-          linksHtml += chipHtml(resolved);
-        } else {
-          linksHtml += `<div class="link-chip" style="color:var(--danger); cursor:default;">⚠ ${key} (saknas)</div>`;
-        }
+        linksHtml += resolvedLinkChipHtml(resolveLink(key, state.activePath), key);
       });
       linksHtml += `</div>`;
     }
@@ -63,10 +58,7 @@ function renderLinkPane() {
     relatedHtml += `<div class="link-empty">Inget angivet</div>`;
   } else {
     related.forEach((key) => {
-      const resolved = resolveLink(key, state.activePath);
-      relatedHtml += resolved
-        ? chipHtml(resolved)
-        : `<div class="link-chip" style="color:var(--danger); cursor:default;">⚠ ${key} (saknas)</div>`;
+      relatedHtml += resolvedLinkChipHtml(resolveLink(key, state.activePath), key);
     });
   }
   relatedSection.innerHTML = relatedHtml;
@@ -90,11 +82,40 @@ function renderLinkPane() {
       if (isMobileLayout()) closeAllMobilePanes();
     });
   });
+
+  pane.querySelectorAll('.link-chip-locked').forEach((chip) => {
+    chip.addEventListener('click', async () => {
+      const success = await promptForPassword();
+      if (!success) return;
+      refreshForLockStateChange();
+      const advKey = chip.dataset.lockedAdventure;
+      await ensureAdventureLoaded(advKey);
+      const targetPath = resolveLink(chip.dataset.lockedKey, state.activePath);
+      if (typeof targetPath === 'string') {
+        openTab(targetPath);
+      }
+      if (isMobileLayout()) closeAllMobilePanes();
+    });
+  });
 }
 
 function chipHtml(path) {
   const type = getType(path);
   return `<div class="link-chip" data-path="${path}"><span class="type-icon">${iconFor(type)}</span> ${getDisplayName(path)}</div>`;
+}
+
+function resolvedLinkChipHtml(resolved, originalKey) {
+  if (!resolved) {
+    return `<div class="link-chip" style="color:var(--danger); cursor:default;">⚠ ${originalKey} (saknas)</div>`;
+  }
+  if (typeof resolved === 'object' && resolved.locked) {
+    return lockedChipHtml(resolved);
+  }
+  return chipHtml(resolved);
+}
+
+function lockedChipHtml(descriptor) {
+  return `<div class="link-chip link-chip-locked" data-locked-key="${descriptor.key}" data-locked-adventure="${descriptor.adventureKey}" title="I det låsta äventyret \u201c${descriptor.adventureName}\u201d">🔒 ${descriptor.key}</div>`;
 }
 
 function divider() {

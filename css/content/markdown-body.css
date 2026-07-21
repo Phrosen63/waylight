@@ -63,6 +63,18 @@
   border-bottom-style: dashed;
 }
 
+.doc-body .wikilink-locked {
+  color: var(--text-faint);
+  font-style: italic;
+  border-bottom: 1px dashed var(--text-faint);
+  cursor: pointer;
+}
+
+.doc-body .wikilink-locked:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent-dim);
+}
+
 .doc-body table {
   width: 100%;
   border-collapse: collapse;

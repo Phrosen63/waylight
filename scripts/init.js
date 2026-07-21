@@ -33,6 +33,7 @@ function showErrorScreen(detail, errorList) {
 async function init() {
   initResponsivePanes();
   initPageSearch();
+  initMasterLock();
   document.getElementById('refresh-btn').addEventListener('click', () => loadAndRender(true));
   document.getElementById('undo-btn').addEventListener('click', undoCloseTab);
   initUndoKeyboardShortcut();
@@ -81,13 +82,6 @@ async function loadAndRender(forceRefresh) {
   buildTree();
   renderContent();
   renderLinkPane();
-
-  if (state.openTabs.length === 0) {
-    const firstProject = [...state.files.values()].find((f) => f.isProject);
-    if (firstProject?.data?.startsida) {
-      openTab(firstProject.data.startsida);
-    }
-  }
 
   if (state.loadErrors.length > 0) {
     console.warn('Waylight: fel vid inläsning av vissa filer:', state.loadErrors);

@@ -68,6 +68,17 @@
   font-style: italic;
 }
 
+.link-chip-locked {
+  color: var(--text-faint);
+  font-style: italic;
+  border-style: dashed;
+}
+
+.link-chip-locked:hover {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
 .link-pane-divider {
   height: 1px;
   background: var(--border);

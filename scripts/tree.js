@@ -102,7 +102,49 @@ function renderTreeBody(treeBody, query) {
 
     const nested = document.createElement('div');
     nested.className = 'tree-nested' + (isCollapsed ? ' collapsed' : '');
-    globalFolders[folder].sort().forEach((path) => nested.appendChild(makeTreeItem(path)));
+
+    const subfolders = {};
+    const looseFiles = []; // files directly in the folder root, no subfolder
+
+    globalFolders[folder].forEach((path) => {
+      const parts = path.split('/'); // [folder, ...maybe-subfolder, filename]
+      if (parts.length > 2) {
+        const subfolder = parts[1];
+        if (!subfolders[subfolder]) subfolders[subfolder] = [];
+        subfolders[subfolder].push(path);
+      } else {
+        looseFiles.push(path);
+      }
+    });
+
+    const orderedSubfolders = Object.keys(subfolders).sort();
+
+    for (const subfolder of orderedSubfolders) {
+      const subSectionId = `${sectionId}:${subfolder}`;
+      const subCollapsed = isSearching ? false : collapsedSections.has(subSectionId);
+
+      const subLabelEl = document.createElement('div');
+      subLabelEl.className = 'tree-folder tree-folder-sub' + (subCollapsed ? ' collapsed' : '');
+      subLabelEl.innerHTML = `<span class="chevron">▾</span> ${capitalize(subfolder)}`;
+
+      const subNested = document.createElement('div');
+      subNested.className = 'tree-nested' + (subCollapsed ? ' collapsed' : '');
+      subfolders[subfolder].sort().forEach((path) => subNested.appendChild(makeTreeItem(path)));
+
+      subLabelEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const nowCollapsed = subLabelEl.classList.toggle('collapsed');
+        subNested.classList.toggle('collapsed');
+        if (nowCollapsed) collapsedSections.add(subSectionId);
+        else collapsedSections.delete(subSectionId);
+      });
+
+      nested.appendChild(subLabelEl);
+      nested.appendChild(subNested);
+    }
+
+    // Files directly in the folder root (no subfolder) render as plain items
+    looseFiles.sort().forEach((path) => nested.appendChild(makeTreeItem(path)));
 
     labelEl.addEventListener('click', () => {
       const nowCollapsed = labelEl.classList.toggle('collapsed');
@@ -116,7 +158,11 @@ function renderTreeBody(treeBody, query) {
     treeBody.appendChild(section);
   }
 
-  const advKeys = Object.keys(adventures);
+  const advKeys =
+    Object.keys(adventures).length > 0
+      ? Object.keys(adventures)
+      : Object.keys(state.adventureFilePaths || {}); // adventures whose content hasn't been fetched yet still need to show up
+
   if (advKeys.length > 0 || !isSearching) {
     const advSection = document.createElement('div');
     advSection.className = 'tree-section';
@@ -124,11 +170,30 @@ function renderTreeBody(treeBody, query) {
 
     for (const advKey of advKeys) {
       const sectionId = `aventyr:${advKey}`;
-      const isCollapsed = isSearching ? false : collapsedSections.has(sectionId);
-
-      const projectPath = `aventyr/${advKey}/project.yaml`;
+      const projectPath = `aventyr/${advKey}/aventyr.yaml`;
       const projectFile = state.files.get(projectPath);
-      const title = projectFile?.data?.titel || advKey;
+      const title = projectFile?.data?.namn || advKey;
+
+      const hasUnfetchedContent = (state.adventureFilePaths?.[advKey]?.length || 0) > 0;
+      const isLockedForNow = hasUnfetchedContent && !isUnlocked();
+
+      if (isLockedForNow) {
+        if (isSearching) continue; // can't search content we haven't fetched
+        const lockedRow = document.createElement('div');
+        lockedRow.className = 'tree-folder tree-adventure-locked';
+        lockedRow.innerHTML = `<span class="lock-icon">🔒</span> ${title}`;
+        lockedRow.addEventListener('click', async () => {
+          const success = await promptForPassword();
+          if (success) {
+            refreshForLockStateChange();
+            await ensureAdventureLoaded(advKey);
+          }
+        });
+        advSection.appendChild(lockedRow);
+        continue;
+      }
+
+      const isCollapsed = isSearching ? false : collapsedSections.has(sectionId);
 
       const folderEl = document.createElement('div');
       folderEl.className = 'tree-folder' + (isCollapsed ? ' collapsed' : '');
@@ -140,7 +205,7 @@ function renderTreeBody(treeBody, query) {
       const subfolders = {};
       const looseFiles = []; // files directly under the adventure root, if any
 
-      adventures[advKey].forEach((path) => {
+      (adventures[advKey] || []).forEach((path) => {
         const parts = path.split('/'); // ["aventyr", advKey, subfolder, ...rest]
         if (parts.length > 3) {
           const subfolder = parts[2];
@@ -203,12 +268,28 @@ function renderTreeBody(treeBody, query) {
   }
 }
 
+async function ensureAdventureLoaded(advKey) {
+  const hasUnfetchedContent = (state.adventureFilePaths?.[advKey]?.length || 0) > 0;
+  if (!hasUnfetchedContent) return;
+
+  const result = await loadAdventureContent(advKey);
+  if (!result.ok) {
+    console.warn(`Waylight: kunde inte läsa in äventyret ${advKey}:`, result.detail);
+  }
+  buildTree(); // re-render now that content is available
+}
+
 function makeTreeItem(path) {
   const el = document.createElement('div');
-  el.className = 'tree-item';
+  const file = state.files.get(path);
+  const isConfidential = isConfidentialFile(path, file);
+  const showsAsLocked = isConfidential && !isUnlocked();
+
+  el.className = 'tree-item' + (showsAsLocked ? ' tree-item-confidential' : '');
   el.dataset.path = path;
   const type = getType(path);
-  el.innerHTML = `<span class="type-icon">${iconFor(type)}</span> ${getDisplayName(path)}`;
+  const icon = showsAsLocked ? '🔒' : iconFor(type);
+  el.innerHTML = `<span class="type-icon">${icon}</span> ${getDisplayName(path)}`;
   el.addEventListener('click', () => {
     openTab(path);
     if (isMobileLayout()) closeAllMobilePanes();

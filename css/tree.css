@@ -116,6 +116,28 @@
   color: var(--text-dim);
 }
 
+.tree-adventure-locked {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+.tree-adventure-locked:hover {
+  color: var(--accent);
+}
+
+.tree-adventure-locked .lock-icon {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.tree-item-confidential {
+  color: var(--danger);
+}
+
+.tree-item-confidential:hover {
+  color: var(--text);
+}
+
 .tree-item {
   display: flex;
   align-items: center;

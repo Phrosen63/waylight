@@ -4,14 +4,21 @@ function renderMarkdown(file) {
   let body = file.body.replace(
     /\{\.([a-zA-Z0-9_-]+)\}([\s\S]*?)\{\/\}/g,
     (match, className, inner) => {
+      if (className === 'spelledare' && !isUnlocked()) {
+        return `<span class="md-tag md-tag-spelledare md-tag-locked">Låst innehåll, lås upp för att visa.</span>`;
+      }
       return `<span class="md-tag md-tag-${className}">${inner}</span>`;
     },
   );
 
   body = body.replace(/\[\[([^\]]+)\]\]/g, (match, key) => {
-    const resolved = resolveLink(key.trim(), currentPath);
-    if (resolved) {
+    const trimmedKey = key.trim();
+    const resolved = resolveLink(trimmedKey, currentPath);
+    if (typeof resolved === 'string') {
       return `[${getDisplayName(resolved)}](#${encodeURIComponent(resolved)})`;
+    }
+    if (resolved && resolved.locked) {
+      return `<span class="wikilink-locked" data-locked-key="${resolved.key}" data-locked-adventure="${resolved.adventureKey}" title="I det låsta äventyret &quot;${resolved.adventureName}&quot;">🔒 ${trimmedKey}</span>`;
     }
     return `<span class="link-missing-text" title="Länk saknas: ${key}">${key}</span>`;
   });

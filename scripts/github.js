@@ -12,6 +12,10 @@ function rawFileUrl(path) {
   return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${path}`;
 }
 
+function isAdventureContentPath(path) {
+  return path.startsWith('aventyr/') && !path.endsWith('aventyr.yaml');
+}
+
 function readCache() {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
@@ -45,6 +49,28 @@ function clearCache() {
   }
 }
 
+function adventureCacheKey(advKey, sha) {
+  return `${CACHE_KEY}:aventyr:${advKey}:${sha}`;
+}
+
+function readAdventureCache(advKey, sha) {
+  try {
+    const raw = localStorage.getItem(adventureCacheKey(advKey, sha));
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function writeAdventureCache(advKey, sha, filesObject) {
+  try {
+    localStorage.setItem(adventureCacheKey(advKey, sha), JSON.stringify(filesObject));
+  } catch (e) {
+    console.warn(`Waylight: kunde inte cacha äventyret ${advKey}:`, e);
+  }
+}
+
 function filesMapToObject(map) {
   const obj = {};
   for (const [path, value] of map) obj[path] = value;
@@ -73,9 +99,43 @@ async function mapWithConcurrency(items, limit, fn) {
   return results;
 }
 
+async function fetchAndStoreFile(path) {
+  try {
+    const res = await fetch(rawFileUrl(path));
+    if (!res.ok) {
+      state.loadErrors.push(`Kunde inte hämta ${path} (status ${res.status}).`);
+      return false;
+    }
+    const raw = await res.text();
+
+    if (path.endsWith('aventyr.yaml')) {
+      let data = {};
+      try {
+        data = jsyaml.load(raw) || {};
+      } catch (e) {
+        state.loadErrors.push(`YAML-fel i ${path}: ${e.message}`);
+      }
+      state.files.set(path, { isProject: true, data, raw });
+    } else {
+      const parsed = parseFile(path, raw);
+      state.files.set(path, {
+        ...parsed,
+        raw,
+        path,
+        folder: path.split('/')[0],
+      });
+    }
+    return true;
+  } catch (e) {
+    state.loadErrors.push(`Nätverksfel vid hämtning av ${path}.`);
+    return false;
+  }
+}
+
 async function loadFromGitHub(onProgress, forceRefresh = false) {
   state.loadErrors = [];
 
+  // ----- 0. Check current commit SHA against cache -----
   let currentSha = null;
   try {
     const refRes = await fetch(GITHUB_API_REF_URL);
@@ -83,22 +143,24 @@ async function loadFromGitHub(onProgress, forceRefresh = false) {
       const refData = await refRes.json();
       currentSha = refData?.object?.sha || null;
     }
-    // If this fails, we fall through and just do a full fetch below —
-    // worst case we skip the cache optimization, we don't hard-fail here.
   } catch (e) {
     // network hiccup on the lightweight check; full fetch below will surface
     // any real connectivity problem with a proper error message.
   }
+  state.currentSha = currentSha;
 
   if (!forceRefresh && currentSha) {
     const cached = readCache();
     if (cached && cached.sha === currentSha) {
       state.files = objectToFilesMap(cached.files);
+      state.adventureFilePaths = cached.adventureFilePaths || {};
       return { ok: true, fromCache: true, cachedAt: cached.cachedAt };
     }
   }
 
+  // ----- 1. Fetch the repo's file tree -----
   state.files.clear();
+  state.adventureFilePaths = {}; // advKey -> array of paths not yet fetched
   let treeData;
   try {
     const treeRes = await fetch(GITHUB_API_TREE_URL);
@@ -139,52 +201,36 @@ async function loadFromGitHub(onProgress, forceRefresh = false) {
     );
   }
 
-  const relevantEntries = (treeData.tree || []).filter(
+  // ----- 2. Filter to relevant files, split into eager vs. lazy (adventure content) -----
+  const allRelevant = (treeData.tree || []).filter(
     (entry) =>
-      entry.type === 'blob' && (entry.path.endsWith('.md') || entry.path.endsWith('project.yaml')),
+      entry.type === 'blob' && (entry.path.endsWith('.md') || entry.path.endsWith('aventyr.yaml')),
   );
 
-  if (relevantEntries.length === 0) {
+  const eagerEntries = allRelevant.filter((entry) => !isAdventureContentPath(entry.path));
+  const lazyEntries = allRelevant.filter((entry) => isAdventureContentPath(entry.path));
+
+  if (allRelevant.length === 0) {
     return {
       ok: false,
       error: 'empty-repo',
-      detail: 'Repot innehåller inga .md- eller project.yaml-filer.',
+      detail: 'Repot innehåller inga .md- eller aventyr.yaml-filer.',
     };
   }
 
-  let completed = 0;
-  await mapWithConcurrency(relevantEntries, 8, async (entry) => {
-    try {
-      const res = await fetch(rawFileUrl(entry.path));
-      if (!res.ok) {
-        state.loadErrors.push(`Kunde inte hämta ${entry.path} (status ${res.status}).`);
-        return;
-      }
-      const raw = await res.text();
+  // Record lazy paths grouped by adventure key, without fetching their content yet.
+  lazyEntries.forEach((entry) => {
+    const advKey = entry.path.split('/')[1];
+    if (!state.adventureFilePaths[advKey]) state.adventureFilePaths[advKey] = [];
+    state.adventureFilePaths[advKey].push(entry.path);
+  });
 
-      if (entry.path.endsWith('project.yaml')) {
-        let data = {};
-        try {
-          data = jsyaml.load(raw) || {};
-        } catch (e) {
-          state.loadErrors.push(`YAML-fel i ${entry.path}: ${e.message}`);
-        }
-        state.files.set(entry.path, { isProject: true, data, raw });
-      } else {
-        const parsed = parseFile(entry.path, raw);
-        state.files.set(entry.path, {
-          ...parsed,
-          raw,
-          path: entry.path,
-          folder: entry.path.split('/')[0],
-        });
-      }
-    } catch (e) {
-      state.loadErrors.push(`Nätverksfel vid hämtning av ${entry.path}.`);
-    } finally {
-      completed++;
-      if (onProgress) onProgress(completed, relevantEntries.length);
-    }
+  // ----- 3. Fetch eager content only (bounded concurrency) -----
+  let completed = 0;
+  await mapWithConcurrency(eagerEntries, 8, async (entry) => {
+    await fetchAndStoreFile(entry.path);
+    completed++;
+    if (onProgress) onProgress(completed, eagerEntries.length);
   });
 
   if (state.files.size === 0) {
@@ -195,9 +241,50 @@ async function loadFromGitHub(onProgress, forceRefresh = false) {
     };
   }
 
+  // ----- 4. Update cache for next time -----
   if (currentSha) {
     writeCache(currentSha, filesMapToObject(state.files));
   }
 
   return { ok: true, fromCache: false };
+}
+
+async function loadAdventureContent(advKey) {
+  const paths = state.adventureFilePaths?.[advKey];
+  if (!paths || paths.length === 0) {
+    return { ok: true, alreadyLoaded: true }; // nothing pending — either already loaded or adventure has no content files
+  }
+
+  // Try the per-adventure cache first (only valid if repo hasn't changed since).
+  if (state.currentSha) {
+    const cached = readAdventureCache(advKey, state.currentSha);
+    if (cached) {
+      for (const [path, value] of Object.entries(cached)) {
+        state.files.set(path, value);
+      }
+      delete state.adventureFilePaths[advKey];
+      return { ok: true, alreadyLoaded: false, fromCache: true };
+    }
+  }
+
+  const fetchedPaths = [];
+  await mapWithConcurrency(paths, 8, async (path) => {
+    const success = await fetchAndStoreFile(path);
+    if (success) fetchedPaths.push(path);
+  });
+
+  if (fetchedPaths.length === 0 && paths.length > 0) {
+    return { ok: false, detail: `Kunde inte hämta filer för äventyret "${advKey}".` };
+  }
+
+  if (state.currentSha) {
+    const advFilesObj = {};
+    fetchedPaths.forEach((path) => {
+      advFilesObj[path] = state.files.get(path);
+    });
+    writeAdventureCache(advKey, state.currentSha, advFilesObj);
+  }
+
+  delete state.adventureFilePaths[advKey];
+  return { ok: true, alreadyLoaded: false, fromCache: false };
 }

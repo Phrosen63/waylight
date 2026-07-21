@@ -5,6 +5,8 @@ const state = {
   currentProject: null, // path prefix, t.ex. "aventyr/den-sjunkna-staden"
   loadErrors: [],
   closedTabsHistory: [], // stack of { path, index } — most recently closed last, for undo (Ctrl+Z)
+  adventureFilePaths: {}, // advKey -> [paths] not yet fetched (lazy adventure loading, see github.js)
+  currentSha: null, // repo's current commit SHA, used for per-adventure cache keys
 };
 
 const TYPE_ICONS = {
@@ -52,11 +54,34 @@ function resolveLink(key, fromPath) {
 
   const globalFolders = ['regler', 'monster', 'karaktarer', 'foremal'];
   for (const folder of globalFolders) {
-    const candidate = `${folder}/${key}.md`;
-    if (state.files.has(candidate)) return candidate;
+    for (const [path, file] of state.files) {
+      if (file.isProject) continue;
+      if (path.startsWith(folder + '/') && path.endsWith('/' + key + '.md')) return path;
+      if (path === `${folder}/${key}.md`) return path; // direct child of the folder, no subfolder
+    }
   }
 
-  return null; // unresolved
+  for (const [path, file] of state.files) {
+    if (!file.isProject) continue; // only aventyr.yaml entries carry a "filer" index
+    const advKey = path.split('/')[1];
+    const fileIndex = file.data?.filer || [];
+    const matchingEntry = fileIndex.find((entry) => entry.split('/').pop() === key);
+    if (matchingEntry) {
+      const alreadyLoadedPath = [...state.files.keys()].find(
+        (p) => p.startsWith(`aventyr/${advKey}/`) && p.endsWith('/' + key + '.md'),
+      );
+      if (alreadyLoadedPath) return alreadyLoadedPath;
+
+      return {
+        locked: true,
+        adventureKey: advKey,
+        adventureName: file.data?.namn || advKey,
+        key,
+      };
+    }
+  }
+
+  return null; // unresolved anywhere
 }
 
 function getDisplayName(path) {
@@ -68,6 +93,11 @@ function getDisplayName(path) {
 function getType(path) {
   const f = state.files.get(path);
   return f?.frontmatter?.type || null;
+}
+
+function isConfidentialFile(path, file) {
+  if (path.startsWith('aventyr/')) return true;
+  return file?.frontmatter?.confidential === true;
 }
 
 function detectNameCollisions() {

@@ -65,9 +65,24 @@ function renderContent() {
   const parts = state.activePath.split('/');
   if (parts[0] === 'aventyr') {
     projectNameEl.textContent =
-      state.files.get(`${parts[0]}/${parts[1]}/project.yaml`)?.data?.titel || parts[1];
+      state.files.get(`${parts[0]}/${parts[1]}/aventyr.yaml`)?.data?.namn || parts[1];
   } else {
     projectNameEl.textContent = 'Globalt innehåll';
+  }
+
+  const isConfidential = isConfidentialFile(state.activePath, file);
+  if (isConfidential && !isUnlocked()) {
+    scroll.innerHTML = `
+      <div class="content-inner">
+        <div class="doc-type-badge">${iconFor(file.frontmatter?.type)} ${file.frontmatter?.type || 'sida'}</div>
+        <h1 class="doc-title">${getDisplayName(state.activePath)}</h1>
+        <div class="confidential-lock-notice">
+          <div class="confidential-lock-icon">🔒</div>
+          <div class="confidential-lock-text">Det här innehållet är låst.<br>Lås upp för att visa sidan.</div>
+        </div>
+      </div>`;
+    resetPageSearch();
+    return;
   }
 
   const isDraft = file.frontmatter?.status === 'draft';
@@ -100,6 +115,20 @@ function renderContent() {
       e.preventDefault();
       const target = document.getElementById(a.dataset.anchor);
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  scroll.querySelectorAll('.wikilink-locked').forEach((el) => {
+    el.addEventListener('click', async () => {
+      const success = await promptForPassword();
+      if (!success) return;
+      refreshForLockStateChange();
+      const advKey = el.dataset.lockedAdventure;
+      await ensureAdventureLoaded(advKey);
+      const targetPath = resolveLink(el.dataset.lockedKey, state.activePath);
+      if (typeof targetPath === 'string') {
+        openTab(targetPath);
+      }
     });
   });
 
