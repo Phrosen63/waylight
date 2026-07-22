@@ -3,10 +3,16 @@ const GITHUB_REPO = 'waypoints';
 const GITHUB_BRANCH = 'main';
 
 const GITHUB_API_TREE_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/trees/${GITHUB_BRANCH}?recursive=1`;
-
 const GITHUB_API_REF_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/refs/heads/${GITHUB_BRANCH}`;
 
 const CACHE_KEY = `waylight-cache:${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
+
+const CONTENT_ROOT_FOLDERS = ['regler', 'monster', 'karaktarer', 'foremal', 'aventyr'];
+
+function isUnderContentRoot(path) {
+  const topLevel = path.split('/')[0];
+  return CONTENT_ROOT_FOLDERS.includes(topLevel);
+}
 
 function rawFileUrl(path) {
   return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${path}`;
@@ -202,10 +208,11 @@ async function loadFromGitHub(onProgress, forceRefresh = false) {
     );
   }
 
-  // ----- 2. Filter to relevant files, split into eager vs. lazy (adventure content) -----
   const allRelevant = (treeData.tree || []).filter(
     (entry) =>
-      entry.type === 'blob' && (entry.path.endsWith('.md') || entry.path.endsWith('aventyr.yaml')),
+      entry.type === 'blob' &&
+      (entry.path.endsWith('.md') || entry.path.endsWith('aventyr.yaml')) &&
+      isUnderContentRoot(entry.path),
   );
 
   const eagerEntries = allRelevant.filter((entry) => !isAdventureContentPath(entry.path));
@@ -215,7 +222,8 @@ async function loadFromGitHub(onProgress, forceRefresh = false) {
     return {
       ok: false,
       error: 'empty-repo',
-      detail: 'Repot innehåller inga .md- eller aventyr.yaml-filer.',
+      detail:
+        'Repot innehåller inga .md- eller aventyr.yaml-filer under regler/, monster/, karaktarer/, foremal/ eller aventyr/.',
     };
   }
 
