@@ -14,7 +14,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: var(--text-size-ui-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--accent);
@@ -27,7 +27,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: var(--text-size-ui-xs);
   color: #d4b483;
   background: var(--todo-bg);
   border: 1px solid var(--todo-border);
@@ -39,7 +39,7 @@
 
 .doc-title {
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: var(--text-size-doc-title);
   font-weight: 600;
   color: var(--text);
   margin: 0 0 22px;

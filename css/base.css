@@ -1,27 +1,3 @@
-:root {
-  --bg: #2b2620;
-  --bg-elevated: #332d25;
-  --surface: #3a332a;
-  --surface-hover: #453d31;
-  --border: #574a38;
-  --text: #f2ead9;
-  --text-dim: #c2b39c;
-  --text-faint: #93856d;
-  --accent: #d9ab68;
-  --accent-dim: #a9834f;
-  --link: #92bd8e;
-  --link-hover: #aed4a9;
-  --danger: #c47764;
-  --todo-bg: #4a3b26;
-  --todo-border: #a9834f;
-  --font-display: 'Spectral', serif;
-  --font-body: 'Source Sans 3', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-
-  --tree-width: 240px;
-  --link-width: 270px;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -34,7 +10,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: var(--text-size-content-base);
   line-height: 1.6;
 }
 

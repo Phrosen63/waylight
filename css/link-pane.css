@@ -1,5 +1,5 @@
 .link-pane {
-  width: 270px;
+  width: var(--link-width);
   flex-shrink: 0;
   background: var(--bg-elevated);
   border-left: 1px solid var(--border);
@@ -12,7 +12,7 @@
 }
 
 .link-section-title {
-  font-size: 11px;
+  font-size: var(--text-size-ui-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-faint);
@@ -27,7 +27,7 @@
 }
 
 .link-group-label {
-  font-size: 11px;
+  font-size: var(--text-size-ui-xs);
   color: var(--text-faint);
   font-family: var(--font-mono);
   margin-bottom: 5px;
@@ -42,7 +42,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 5px;
-  font-size: 13px;
+  font-size: var(--text-size-ui-base);
   color: var(--text-dim);
   cursor: pointer;
   transition:
@@ -58,12 +58,12 @@
 }
 
 .link-chip .type-icon {
-  font-size: 11px;
+  font-size: var(--text-size-ui-sm);
   opacity: 0.7;
 }
 
 .link-empty {
-  font-size: 12.5px;
+  font-size: var(--text-size-ui-sm);
   color: var(--text-faint);
   font-style: italic;
 }

@@ -11,7 +11,7 @@
 .topbar .brand {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 19px;
+  font-size: var(--text-size-h3);
   color: var(--accent);
   letter-spacing: 0.02em;
   display: flex;
@@ -20,12 +20,12 @@
 }
 
 .topbar .brand .glyph {
-  font-size: 16px;
+  font-size: var(--text-size-ui-md);
 }
 
 .topbar .project-name {
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: var(--text-size-ui-base);
   padding-left: 12px;
   border-left: 1px solid var(--border);
 }
@@ -35,7 +35,7 @@
 }
 
 .topbar .status-pill {
-  font-size: 11px;
+  font-size: var(--text-size-ui-xs);
   color: var(--text-faint);
   font-family: var(--font-mono);
   padding: 3px 8px;
@@ -53,7 +53,7 @@
   border: 1px solid var(--border);
   border-radius: 5px;
   color: var(--text-dim);
-  font-size: 14px;
+  font-size: var(--text-size-ui-sm);
   cursor: pointer;
   transition:
     background 0.12s,
@@ -103,7 +103,7 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text-dim);
-  font-size: 15px;
+  font-size: var(--text-size-ui-md);
   cursor: pointer;
   flex-shrink: 0;
 }
