@@ -175,9 +175,9 @@ function renderTreeBody(treeBody, query) {
       const title = projectFile?.data?.namn || advKey;
 
       const hasUnfetchedContent = (state.adventureFilePaths?.[advKey]?.length || 0) > 0;
-      const isLockedForNow = hasUnfetchedContent && !isUnlocked();
 
-      if (isLockedForNow) {
+      if (hasUnfetchedContent && !isUnlocked()) {
+        // Låst och oupplåst — visa lås-raden, trigga upplåsning vid klick
         if (isSearching) continue; // can't search content we haven't fetched
         const lockedRow = document.createElement('div');
         lockedRow.className = 'tree-folder tree-adventure-locked';
@@ -190,6 +190,17 @@ function renderTreeBody(treeBody, query) {
           }
         });
         advSection.appendChild(lockedRow);
+        continue;
+      }
+
+      if (hasUnfetchedContent && isUnlocked()) {
+        if (!isSearching) {
+          const loadingRow = document.createElement('div');
+          loadingRow.className = 'tree-folder tree-adventure-locked';
+          loadingRow.innerHTML = `<span class="lock-icon">⏳</span> ${title}`;
+          advSection.appendChild(loadingRow);
+        }
+        ensureAdventureLoaded(advKey);
         continue;
       }
 
@@ -268,15 +279,23 @@ function renderTreeBody(treeBody, query) {
   }
 }
 
+const pendingAdventureLoads = new Set(); // advKeys currently being fetched, to avoid duplicate parallel loads
+
 async function ensureAdventureLoaded(advKey) {
   const hasUnfetchedContent = (state.adventureFilePaths?.[advKey]?.length || 0) > 0;
   if (!hasUnfetchedContent) return;
+  if (pendingAdventureLoads.has(advKey)) return; // already in flight, let that call finish and re-render
 
-  const result = await loadAdventureContent(advKey);
-  if (!result.ok) {
-    console.warn(`Waylight: kunde inte läsa in äventyret ${advKey}:`, result.detail);
+  pendingAdventureLoads.add(advKey);
+  try {
+    const result = await loadAdventureContent(advKey);
+    if (!result.ok) {
+      console.warn(`Waylight: kunde inte läsa in äventyret ${advKey}:`, result.detail);
+    }
+    buildTree(); // re-render now that content is available
+  } finally {
+    pendingAdventureLoads.delete(advKey);
   }
-  buildTree(); // re-render now that content is available
 }
 
 function makeTreeItem(path) {
