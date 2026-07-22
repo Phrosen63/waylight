@@ -96,6 +96,7 @@ function getType(path) {
 }
 
 function isConfidentialFile(path, file) {
+  if (path.endsWith('aventyr.yaml')) return false;
   if (path.startsWith('aventyr/')) return true;
   return file?.frontmatter?.confidential === true;
 }

@@ -26,7 +26,7 @@ function readCache() {
   }
 }
 
-function writeCache(sha, filesObject) {
+function writeCache(sha, filesObject, adventureFilePathsObject) {
   try {
     localStorage.setItem(
       CACHE_KEY,
@@ -34,6 +34,7 @@ function writeCache(sha, filesObject) {
         sha,
         cachedAt: Date.now(),
         files: filesObject,
+        adventureFilePaths: adventureFilePathsObject,
       }),
     );
   } catch (e) {
@@ -243,7 +244,7 @@ async function loadFromGitHub(onProgress, forceRefresh = false) {
 
   // ----- 4. Update cache for next time -----
   if (currentSha) {
-    writeCache(currentSha, filesMapToObject(state.files));
+    writeCache(currentSha, filesMapToObject(state.files), state.adventureFilePaths);
   }
 
   return { ok: true, fromCache: false };
