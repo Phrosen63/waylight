@@ -1,13 +1,13 @@
 function renderMarkdown(file) {
   const currentPath = file.path;
 
+  const tagBlocks = [];
   let body = file.body.replace(
     /\{\.([a-zA-Z0-9_-]+)\}([\s\S]*?)\{\/\}/g,
     (match, className, inner) => {
-      if (className === 'spelledare' && !isUnlocked()) {
-        return `<span class="md-tag md-tag-spelledare md-tag-locked">Låst innehåll, lås upp för att visa.</span>`;
-      }
-      return `<span class="md-tag md-tag-${className}">${inner}</span>`;
+      const token = `\u0000TAG${tagBlocks.length}\u0000`;
+      tagBlocks.push({ className, inner: inner.trim() });
+      return token;
     },
   );
 
@@ -40,7 +40,33 @@ function renderMarkdown(file) {
     return `<img src="${src}" alt="${text}"${titleAttr} loading="lazy" class="doc-image">`;
   };
 
-  return marked.parse(body, { renderer });
+  let html = marked.parse(body, { renderer });
+
+  tagBlocks.forEach((tag, i) => {
+    const token = `\u0000TAG${i}\u0000`;
+    let replacement;
+
+    const isLockableTag = tag.className === 'spelledare' || tag.className === 'konfidentiellt';
+
+    if (isLockableTag && !isUnlocked()) {
+      replacement = `<div class="md-tag md-tag-locked-notice">🔒 SL: Låst innehåll, lås upp för att visa.</div>`;
+    } else if (tag.className === 'konfidentiellt') {
+      // Upplåst: rendera innehållet normalt, ingen ram/wrapper alls
+      replacement = marked.parse(tag.inner, { renderer });
+    } else {
+      const innerHtml = marked.parse(tag.inner, { renderer });
+      replacement = `<div class="md-tag md-tag-${tag.className}">${innerHtml}</div>`;
+    }
+
+    const wrappedInP = new RegExp(`<p>\\s*${token}\\s*</p>`);
+    if (wrappedInP.test(html)) {
+      html = html.replace(wrappedInP, replacement);
+    } else {
+      html = html.replace(token, replacement);
+    }
+  });
+
+  return html;
 }
 
 function resolveImageSrc(href, fromPath) {

@@ -20,6 +20,20 @@
   opacity: 0.75;
 }
 
+.md-tag-locked-notice {
+  display: inline-block;
+  background: var(--todo-bg);
+  border: 1px solid var(--todo-border);
+  border-radius: 5px;
+  padding: 6px 12px;
+  color: #d4b483;
+  font-size: 0.92em;
+}
+
+.md-tag-locked-notice::before {
+  content: '';
+}
+
 .md-tag-bildtext {
   display: block;
   text-align: center;
