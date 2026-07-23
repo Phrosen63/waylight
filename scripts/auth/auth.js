@@ -1,19 +1,19 @@
 const MASTER_PASSWORD_HASH = 'c8a3fffa50460cd2169fe1c9aba386a24807e71a0f53b243fe8780ed2aea13cd';
-const UNLOCK_SESSION_KEY = "waylight-unlocked";
+const UNLOCK_SESSION_KEY = 'waylight-unlocked';
 
 function isUnlocked() {
-  return sessionStorage.getItem(UNLOCK_SESSION_KEY) === "true";
+  return sessionStorage.getItem(UNLOCK_SESSION_KEY) === 'true';
 }
 
 async function sha256Hex(text) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 async function tryUnlock(password) {
   const hash = await sha256Hex(password);
   if (hash === MASTER_PASSWORD_HASH) {
-    sessionStorage.setItem(UNLOCK_SESSION_KEY, "true");
+    sessionStorage.setItem(UNLOCK_SESSION_KEY, 'true');
     return true;
   }
   return false;
@@ -30,12 +30,16 @@ function refreshForLockStateChange() {
 }
 
 function updateLockButton() {
-  const btn = document.getElementById("lock-btn");
+  const btn = document.getElementById('lock-btn');
   if (!btn) return;
   const unlocked = isUnlocked();
-  btn.textContent = unlocked ? "🔓" : "🔒";
-  btn.title = unlocked ? "Lås äventyr (klicka för att låsa)" : "Lås upp äventyr";
-  btn.classList.toggle("unlocked", unlocked);
+  const iconEl = btn.querySelector('.btn-icon');
+  const labelEl = btn.querySelector('.btn-label');
+  if (iconEl) iconEl.textContent = unlocked ? '🔓' : '🔒';
+  if (labelEl) labelEl.textContent = unlocked ? 'Lås' : 'Lås upp';
+
+  btn.title = unlocked ? 'Lås äventyr (klicka för att låsa)' : 'Lås upp äventyr';
+  btn.classList.toggle('unlocked', unlocked);
 }
 
 let activeAuthPrompt = null; // { overlay, promise } while a modal is open, else null
@@ -46,8 +50,8 @@ function promptForPassword() {
   }
 
   const promise = new Promise((resolve) => {
-    const overlay = document.createElement("div");
-    overlay.className = "auth-overlay";
+    const overlay = document.createElement('div');
+    overlay.className = 'auth-overlay';
     overlay.innerHTML = `
       <div class="auth-modal">
         <div class="auth-modal-title">🔒 Lås upp äventyr</div>
@@ -62,8 +66,8 @@ function promptForPassword() {
     `;
     document.body.appendChild(overlay);
 
-    const input = overlay.querySelector("#auth-password-input");
-    const errorEl = overlay.querySelector("#auth-modal-error");
+    const input = overlay.querySelector('#auth-password-input');
+    const errorEl = overlay.querySelector('#auth-modal-error');
     input.focus();
 
     function close(result) {
@@ -79,18 +83,20 @@ function promptForPassword() {
       if (success) {
         close(true);
       } else {
-        errorEl.textContent = "Fel lösenord.";
-        input.value = "";
+        errorEl.textContent = 'Fel lösenord.';
+        input.value = '';
         input.focus();
       }
     }
 
-    overlay.querySelector("#auth-submit-btn").addEventListener("click", attemptSubmit);
-    overlay.querySelector("#auth-cancel-btn").addEventListener("click", () => close(false));
-    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(false); });
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") attemptSubmit();
-      if (e.key === "Escape") close(false);
+    overlay.querySelector('#auth-submit-btn').addEventListener('click', attemptSubmit);
+    overlay.querySelector('#auth-cancel-btn').addEventListener('click', () => close(false));
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) close(false);
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') attemptSubmit();
+      if (e.key === 'Escape') close(false);
     });
 
     activeAuthPrompt = { overlay, close };
@@ -105,8 +111,8 @@ function closeActivePrompt() {
 }
 
 function initMasterLock() {
-  const btn = document.getElementById("lock-btn");
-  btn.addEventListener("click", async () => {
+  const btn = document.getElementById('lock-btn');
+  btn.addEventListener('click', async () => {
     if (isUnlocked()) {
       lock();
       refreshForLockStateChange();

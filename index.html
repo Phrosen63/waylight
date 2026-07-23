@@ -32,7 +32,10 @@
       <div class="project-name" id="project-name">Inget projekt inläst</div>
       <div class="spacer"></div>
       <div class="status-pill" id="status-pill">läser in…</div>
-      <button class="refresh-btn" id="refresh-btn" title="Uppdatera från GitHub">⟳</button>
+      <button class="refresh-btn" id="refresh-btn" title="Uppdatera från GitHub">
+        <span class="btn-icon">⟳</span>
+        <span class="btn-label">Uppdatera</span>
+      </button>
 
       <div class="topbar-secondary-row">
         <button
@@ -40,18 +43,24 @@
           id="undo-btn"
           title="Ångra (öppna senast stängda flik) — Ctrl+Z"
           disabled>
-          ↺
+          <span class="btn-icon">↺</span>
+          <span class="btn-label">Ångra</span>
         </button>
-        <button class="refresh-btn" id="lock-btn" title="Lås upp äventyr">🔒</button>
+        <button class="refresh-btn" id="lock-btn" title="Lås upp äventyr">
+          <span class="btn-icon">🔒</span>
+          <span class="btn-label">Lås upp</span>
+        </button>
         <button
           class="pane-toggle"
           id="toggle-page-search"
           aria-label="Sök på sidan"
           title="Sök på sidan">
-          🔍
+          <span class="btn-icon">🔍</span>
+          <span class="btn-label">Sök</span>
         </button>
         <button class="pane-toggle" id="toggle-links" aria-label="Visa länkar" title="Visa länkar">
-          ⚭
+          <span class="btn-icon">⚭</span>
+          <span class="btn-label">Länkar</span>
         </button>
       </div>
     </div>

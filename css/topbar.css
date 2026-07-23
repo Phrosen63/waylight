@@ -42,24 +42,39 @@
   padding: 4px 8px;
   border: 1px solid var(--border);
   border-radius: 4px;
+  opacity: 0.6;
 }
 
 .refresh-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  gap: 2px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 4px 8px;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 4px;
   color: var(--text-dim);
-  font-size: var(--text-size-ui-sm);
   cursor: pointer;
   transition:
     background 0.12s,
-    color 0.12s,
-    transform 0.3s;
+    color 0.12s;
+}
+
+.refresh-btn .btn-icon {
+  font-size: var(--text-size-ui-sm);
+  line-height: 1;
+  transition: transform 0.3s;
+}
+
+.refresh-btn .btn-label {
+  font-size: 10px;
+  line-height: 1;
+  font-family: var(--font-body);
+  white-space: nowrap;
 }
 
 .refresh-btn:hover {
@@ -67,11 +82,12 @@
   color: var(--accent);
 }
 
-.refresh-btn:active {
+.refresh-btn:active .btn-icon {
+  display: inline-block;
   transform: rotate(180deg);
 }
 
-#undo-btn:active:not(:disabled) {
+#undo-btn:active:not(:disabled) .btn-icon {
   transform: scale(0.9) rotate(0deg);
 }
 
@@ -89,24 +105,33 @@
   transform: none;
 }
 
-#lock-btn.unlocked {
-  border-color: var(--link);
-  color: var(--link);
-}
-
 .pane-toggle {
   display: none;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  gap: 2px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 4px 8px;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text-dim);
-  font-size: var(--text-size-ui-md);
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.pane-toggle .btn-icon {
+  font-size: var(--text-size-ui-md);
+  line-height: 1;
+}
+
+.pane-toggle .btn-label {
+  font-size: 10px;
+  line-height: 1;
+  font-family: var(--font-body);
+  white-space: nowrap;
 }
 
 .pane-toggle:hover {
@@ -117,6 +142,17 @@
 .pane-toggle.active {
   color: var(--accent);
   border-color: var(--accent-dim);
+}
+
+#toggle-tree {
+  flex-direction: row;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+}
+
+#toggle-tree .btn-label {
+  display: none;
 }
 
 .topbar-secondary-row {
@@ -141,6 +177,7 @@
   #toggle-page-search {
     display: flex;
   }
+
   .topbar-secondary-row {
     flex-basis: 100%;
     justify-content: flex-end;
