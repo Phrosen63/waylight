@@ -80,12 +80,6 @@ body {
   }
 }
 
-@media (max-width: 620px) {
-  .content-inner {
-    padding: 24px 18px 60px;
-  }
-}
-
 ::-webkit-scrollbar {
   width: 9px;
   height: 9px;

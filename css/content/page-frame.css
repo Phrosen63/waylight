@@ -10,6 +10,12 @@
   padding: 40px 48px 80px;
 }
 
+@media (max-width: 620px) {
+  .content-inner {
+    padding: 24px 16px 40px;
+  }
+}
+
 .doc-type-badge {
   display: inline-flex;
   align-items: center;
