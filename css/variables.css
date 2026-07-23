@@ -1,4 +1,10 @@
+/* ==========================================================================
+   Waylight — globala CSS-variabler
+   Ändra värden här för att justera hela appens utseende på ett ställe.
+   ========================================================================== */
+
 :root {
+  /* ----- Färger ----- */
   --bg: #2b2620;
   --bg-elevated: #332d25;
   --surface: #3a332a;
@@ -15,23 +21,56 @@
   --todo-bg: #4a3b26;
   --todo-border: #a9834f;
 
+  /* ----- Typsnitt (fonter) ----- */
   --font-display: 'Spectral', serif;
   --font-body: 'Source Sans 3', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
+  /* ----- Layout ----- */
   --tree-width: 240px;
   --link-width: 270px;
 
-  --text-size-ui-xs: 12px;
-  --text-size-ui-sm: 13px;
-  --text-size-ui-base: 14.5px;
-  --text-size-ui-md: 15.5px;
+  /* ==========================================================================
+     Typografisk skala
+     Två separata skalor: UI (kontroller, träd, tabbar, paneler, chips) och
+     Content (brödtext + rubriker i själva dokumentet, .doc-body).
+     UI är avsiktligt något mindre än content — etablerad visuell hierarki —
+     men båda kan justeras oberoende av varandra genom att bara ändra värdena
+     nedan. Alla font-size-regler i övriga CSS-filer refererar till dessa
+     variabler istället för hårdkodade px-värden.
+     ========================================================================== */
 
-  --text-size-content-sm: 15px;
-  --text-size-content-base: 17px;
+  /* --- UI-skala (träd, tabbar, sökfält, länkpanel, topbar) --- */
+  --text-size-ui-xs: 12px;        /* var ~11px   — sektionsetiketter, mono-taggar */
+  --text-size-ui-sm: 13px;        /* var ~11-12.5px — subfolder, sökträffräknare */
+  --text-size-ui-base: 14.5px;    /* var ~12.5-13.5px — tree-item, tab, link-chip */
+  --text-size-ui-md: 15.5px;      /* var ~14px   — sökfält-input, auth-modal */
 
-  --text-size-h1: 26px;
-  --text-size-h2: 21px;
-  --text-size-h3: 17.5px;
-  --text-size-doc-title: 34px;
+  /* --- Content-skala (brödtext, tabeller, citat i .doc-body) --- */
+  --text-size-content-sm: 15px;   /* var 13-14px — tabeller, blockquotes */
+  --text-size-content-base: 17px; /* var 15px    — html-bas, p, li, generell brödtext */
+
+  /* --- Rubriker (display-font, Spectral) --- */
+  --text-size-h1: 26px;           /* var 24px */
+  --text-size-h2: 21px;           /* var 19px */
+  --text-size-h3: 17.5px;         /* var 16px */
+  --text-size-doc-title: 34px;    /* var 32px — sidans stora huvudrubrik */
+
+  /* ==========================================================================
+     Spacing-skala
+     Alla margin/padding/gap-värden i appen ska byggas från dessa steg (8px-
+     multipler). Undantag: mikro-detaljer som border-width, border-radius på
+     små element, och enstaka 1-4px-finjusteringar (t.ex. mark-highlight
+     padding) — dessa hårdkodas fortfarande direkt där de används, eftersom de
+     är för små för att meningsfullt uttryckas som "steg".
+     ========================================================================== */
+
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-10: 80px;
 }

@@ -2,8 +2,8 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 14px 20px;
-  margin: 0 0 30px;
+  padding: 16px 24px;
+  margin: 0 0 32px;
 }
 
 .doc-toc-title {
@@ -24,7 +24,7 @@
 }
 
 .doc-toc-list li {
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   break-inside: avoid;
 }
 

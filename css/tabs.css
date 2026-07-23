@@ -16,8 +16,8 @@
 .tabbar {
   display: flex;
   align-items: flex-end;
-  gap: 2px;
-  padding: 10px 12px 0;
+  gap: 8px;
+  padding: 8px 16px 0;
   overflow-x: auto;
   flex: 1;
   min-width: 0;
@@ -27,8 +27,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
-  padding: 8px 12px;
+  gap: 8px;
+  padding: 8px 16px;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -36,10 +36,10 @@
 
 .page-search {
   width: 220px;
-  padding: 5px 26px 5px 9px;
+  padding: 8px 24px 8px 8px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--text);
   font-family: var(--font-body);
   font-size: var(--text-size-ui-md);
@@ -59,7 +59,7 @@
   font-size: var(--text-size-ui-xs);
   color: var(--text-faint);
   font-family: var(--font-mono);
-  min-width: 38px;
+  min-width: 40px;
   text-align: center;
 }
 
@@ -110,11 +110,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px 9px;
+  padding: 8px 16px 8px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-bottom: none;
-  border-radius: 6px 6px 0 0;
+  border-radius: 8px 8px 0 0;
   color: var(--text-faint);
   font-size: var(--text-size-ui-base);
   cursor: pointer;
@@ -151,7 +151,7 @@
   border-color: var(--border);
   border-bottom: 1px solid var(--surface);
   margin-bottom: -1px;
-  padding-bottom: 10px;
+  padding-bottom: 8px;
 }
 
 .tab.active::before {
@@ -161,8 +161,8 @@
 .tab .tab-close {
   opacity: 0.5;
   font-size: var(--text-size-ui-sm);
-  padding: 0 2px;
-  border-radius: 3px;
+  padding: 0 4px;
+  border-radius: 4px;
 }
 
 .tab .tab-close:hover {

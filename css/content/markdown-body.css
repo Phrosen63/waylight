@@ -4,7 +4,7 @@
   color: var(--accent);
   border-bottom: 1px solid var(--border);
   padding-bottom: 8px;
-  margin: 36px 0 16px;
+  margin: 32px 0 16px;
 }
 
 .doc-body h1:first-child {
@@ -15,7 +15,7 @@
   font-family: var(--font-display);
   font-size: var(--text-size-h2);
   color: var(--text);
-  margin: 28px 0 12px;
+  margin: 24px 0 16px;
   scroll-margin-top: 16px;
 }
 
@@ -23,23 +23,23 @@
   font-family: var(--font-display);
   font-size: var(--text-size-h3);
   color: var(--text-dim);
-  margin: 20px 0 10px;
+  margin: 16px 0 8px;
 }
 
 .doc-body p {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   color: var(--text);
   font-size: var(--text-size-content-base);
 }
 
 .doc-body ul,
 .doc-body ol {
-  margin: 0 0 14px;
-  padding-left: 22px;
+  margin: 0 0 16px;
+  padding-left: 24px;
 }
 
 .doc-body li {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-size: var(--text-size-content-base);
 }
 
@@ -80,7 +80,7 @@
 .doc-body table {
   width: 100%;
   border-collapse: collapse;
-  margin: 0 0 18px;
+  margin: 0 0 16px;
   font-size: var(--text-size-content-sm);
 }
 
@@ -91,12 +91,12 @@
   font-size: var(--text-size-ui-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 8px 12px;
+  padding: 8px 16px;
   border-bottom: 2px solid var(--border);
 }
 
 .doc-body td {
-  padding: 7px 12px;
+  padding: 8px 16px;
   border-bottom: 1px solid var(--border);
   color: var(--text-dim);
 }
@@ -107,8 +107,8 @@
 }
 
 .doc-body blockquote {
-  margin: 0 0 14px;
-  padding: 10px 16px;
+  margin: 0 0 16px;
+  padding: 8px 16px;
   border-left: 3px solid var(--border);
   color: var(--text-dim);
   font-size: var(--text-size-content-sm);
@@ -127,7 +127,7 @@
 .doc-body code {
   font-family: var(--font-mono);
   background: var(--bg-elevated);
-  padding: 1px 5px;
-  border-radius: 3px;
+  padding: 0 4px;
+  border-radius: 4px;
   font-size: 0.9em;
 }

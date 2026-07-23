@@ -1,8 +1,8 @@
 .topbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 18px;
+  gap: 16px;
+  padding: 8px 16px;
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -16,7 +16,7 @@
   letter-spacing: 0.02em;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .topbar .brand .glyph {
@@ -26,7 +26,7 @@
 .topbar .project-name {
   color: var(--text-dim);
   font-size: var(--text-size-ui-base);
-  padding-left: 12px;
+  padding-left: 16px;
   border-left: 1px solid var(--border);
 }
 
@@ -38,9 +38,9 @@
   font-size: var(--text-size-ui-xs);
   color: var(--text-faint);
   font-family: var(--font-mono);
-  padding: 3px 8px;
+  padding: 4px 8px;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .refresh-btn {
@@ -51,7 +51,7 @@
   height: 26px;
   background: transparent;
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: 4px;
   color: var(--text-dim);
   font-size: var(--text-size-ui-sm);
   cursor: pointer;
@@ -101,7 +101,7 @@
   height: 32px;
   background: transparent;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--text-dim);
   font-size: var(--text-size-ui-md);
   cursor: pointer;
