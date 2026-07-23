@@ -1,6 +1,7 @@
 .topbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 16px;
   padding: 8px 16px;
   background: var(--bg-elevated);
@@ -118,6 +119,12 @@
   border-color: var(--accent-dim);
 }
 
+.topbar-secondary-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 @media (max-width: 1100px) {
   #toggle-tree {
     display: flex;
@@ -133,5 +140,10 @@
   }
   #toggle-page-search {
     display: flex;
+  }
+  .topbar-secondary-row {
+    flex-basis: 100%;
+    justify-content: flex-end;
+    margin-top: 4px;
   }
 }
