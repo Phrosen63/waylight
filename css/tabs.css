@@ -16,9 +16,10 @@
 .tabbar {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
+  gap: 0;
   padding: 8px 16px 0;
   overflow-x: auto;
+  overflow-y: hidden;
   flex: 1;
   min-width: 0;
 }
