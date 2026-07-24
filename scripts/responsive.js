@@ -22,6 +22,11 @@ function setPaneOpen(paneId, open) {
   pane.classList.toggle('open', open);
   toggleBtn.classList.toggle('active', open);
 
+  if (toggleId === 'toggle-tree') {
+    const labelEl = toggleBtn.querySelector('.btn-label');
+    if (labelEl) labelEl.textContent = open ? 'Stäng' : 'Meny';
+  }
+
   const anyOpen =
     document.getElementById('tree-pane').classList.contains('open') ||
     document.getElementById('link-pane').classList.contains('open');
