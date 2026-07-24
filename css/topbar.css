@@ -45,6 +45,12 @@
   opacity: 0.6;
 }
 
+@media (max-width: 620px) {
+  .topbar .status-pill {
+    max-width: 100px;
+  }
+}
+
 .refresh-btn {
   display: flex;
   flex-direction: column;
