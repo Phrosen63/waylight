@@ -176,6 +176,7 @@
   #toggle-links {
     display: flex;
   }
+
   #toggle-page-search {
     display: flex;
   }
@@ -184,5 +185,12 @@
     flex-basis: 100%;
     justify-content: flex-end;
     margin-top: 4px;
+  }
+}
+
+@media (max-width: 620px) {
+  .topbar-secondary-row {
+    flex-wrap: wrap;
+    gap: 8px;
   }
 }
