@@ -36,6 +36,9 @@
 }
 
 .topbar .status-pill {
+  height: 40px;
+  display: flex;
+  align-items: center;
   font-size: var(--text-size-ui-xs);
   color: var(--text-faint);
   font-family: var(--font-mono);
@@ -77,7 +80,7 @@
 }
 
 .refresh-btn .btn-label {
-  font-size: 10px;
+  font-size: var(--text-size-ui-xs);
   line-height: 1;
   font-family: var(--font-body);
   white-space: nowrap;
@@ -134,7 +137,7 @@
 }
 
 .pane-toggle .btn-label {
-  font-size: 10px;
+  font-size: var(--text-size-ui-xs);
   line-height: 1;
   font-family: var(--font-body);
   white-space: nowrap;
