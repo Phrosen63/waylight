@@ -34,6 +34,7 @@ async function init() {
   initResponsivePanes();
   initPageSearch();
   initMasterLock();
+  initUrlStateSync();
   document.getElementById('refresh-btn').addEventListener('click', () => loadAndRender(true));
   document.getElementById('undo-btn').addEventListener('click', undoCloseTab);
   initUndoKeyboardShortcut();
@@ -82,6 +83,11 @@ async function loadAndRender(forceRefresh) {
   buildTree();
   renderContent();
   renderLinkPane();
+
+  if (!forceRefresh) {
+    const urlState = readUrlState();
+    await applyUrlState(urlState);
+  }
 
   if (state.loadErrors.length > 0) {
     console.warn('Waylight: fel vid inläsning av vissa filer:', state.loadErrors);

@@ -7,6 +7,7 @@ function openTab(path) {
   renderContent();
   renderLinkPane();
   refreshTreeActiveState();
+  scheduleUrlStateWrite();
 }
 
 function closeTab(path, event) {
@@ -30,6 +31,7 @@ function closeTab(path, event) {
   renderLinkPane();
   refreshTreeActiveState();
   updateUndoButtonState();
+  scheduleUrlStateWrite();
 }
 
 function undoCloseTab() {
@@ -48,6 +50,7 @@ function undoCloseTab() {
     renderLinkPane();
     refreshTreeActiveState();
     updateUndoButtonState();
+    scheduleUrlStateWrite();
     return;
   }
   updateUndoButtonState(); // history exhausted, ensure button reflects disabled state

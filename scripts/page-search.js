@@ -18,6 +18,10 @@ function resetPageSearch() {
     wrap.classList.remove('open');
     btn.classList.remove('active');
   }
+
+  if (typeof scheduleUrlStateWrite === 'function') {
+    scheduleUrlStateWrite();
+  }
 }
 
 function runPageSearch(query) {
