@@ -45,6 +45,45 @@ function renderTocHtml(tocEntries) {
     </nav>`;
 }
 
+function buildRevealUrl(path) {
+  const params = new URLSearchParams();
+  params.set('tabs', encodeURIComponent(path));
+  params.set('active', encodeURIComponent(path));
+  params.set('reveal', encodeURIComponent(path));
+  return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+}
+
+function renderShareButtonHtml() {
+  return `
+    <button class="share-reveal-btn" id="share-reveal-btn" title="Kopiera en länk som visar den här sidan olåst, utan att låsa upp resten av äventyret">
+      <span class="btn-icon">🔗</span>
+      <span class="btn-label">Kopiera delningslänk</span>
+    </button>`;
+}
+
+function attachShareButtonHandler(path) {
+  const btn = document.getElementById('share-reveal-btn');
+  if (!btn) return;
+
+  btn.addEventListener('click', async () => {
+    const url = buildRevealUrl(path);
+    try {
+      await navigator.clipboard.writeText(url);
+      const label = btn.querySelector('.btn-label');
+      const original = label.textContent;
+      label.textContent = 'Länk kopierad!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        label.textContent = original;
+        btn.classList.remove('copied');
+      }, 2000);
+    } catch (e) {
+      console.warn('Waylight: kunde inte kopiera länken automatiskt.', e);
+      window.prompt('Kopiera länken manuellt:', url);
+    }
+  });
+}
+
 function renderContent() {
   const scroll = document.getElementById('content-scroll');
   const projectNameEl = document.getElementById('project-name');
@@ -71,7 +110,9 @@ function renderContent() {
   }
 
   const isConfidential = isConfidentialFile(state.activePath, file);
-  if (isConfidential && !isUnlocked()) {
+  const isUnlockedForThisPage = isUnlocked() || isRevealedViaUrl(state.activePath);
+
+  if (isConfidential && !isUnlockedForThisPage) {
     scroll.innerHTML = `
       <div class="content-inner">
         <div class="doc-type-badge">${iconFor(file.frontmatter?.type)} ${file.frontmatter?.type || 'sida'}</div>
@@ -95,13 +136,20 @@ function renderContent() {
     tocHtml = renderTocHtml(extracted.tocEntries);
   }
 
+  const shareButtonHtml = isShareable(state.activePath) ? renderShareButtonHtml() : '';
+
   scroll.innerHTML = `
     <div class="content-inner">
       <div class="doc-type-badge">${iconFor(file.frontmatter?.type)} ${file.frontmatter?.type || 'sida'}${isDraft ? '<span class="draft-badge">✎ utkast</span>' : ''}</div>
       <h1 class="doc-title">${file.frontmatter?.namn || getDisplayName(state.activePath)}</h1>
+      ${shareButtonHtml}
       ${tocHtml}
       <div class="doc-body">${html}</div>
     </div>`;
+
+  if (isShareable(state.activePath)) {
+    attachShareButtonHandler(state.activePath);
+  }
 
   scroll.querySelectorAll('.internal-link').forEach((a) => {
     a.addEventListener('click', (e) => {

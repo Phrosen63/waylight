@@ -19,7 +19,15 @@ function readUrlState() {
   const search = params.get('search') || '';
   const pageSearch = params.get('page_search') || '';
 
-  return { tabs, active, search, pageSearch };
+  const revealParam = params.get('reveal');
+  const reveal = revealParam
+    ? revealParam
+        .split(',')
+        .map((p) => decodeURIComponent(p.trim()))
+        .filter(Boolean)
+    : [];
+
+  return { tabs, active, search, pageSearch, reveal };
 }
 
 function writeUrlStateNow() {
@@ -58,24 +66,45 @@ function scheduleUrlStateWrite() {
 }
 
 async function applyUrlState(urlState) {
-  if (!urlState.tabs.length && !urlState.active && !urlState.search) return;
+  if (!urlState.tabs.length && !urlState.active && !urlState.search && !urlState.reveal.length) {
+    return;
+  }
 
   const touchedAdventures = new Set();
+  const revealTouchedAdventures = new Set();
+
   urlState.tabs.forEach((path) => {
-    if (path.startsWith('aventyr/')) {
-      touchedAdventures.add(path.split('/')[1]);
-    }
+    if (path.startsWith('aventyr/')) touchedAdventures.add(path.split('/')[1]);
   });
   if (urlState.active && urlState.active.startsWith('aventyr/')) {
     touchedAdventures.add(urlState.active.split('/')[1]);
   }
+  urlState.reveal.forEach((path) => {
+    if (path.startsWith('aventyr/')) {
+      touchedAdventures.add(path.split('/')[1]);
+      revealTouchedAdventures.add(path.split('/')[1]);
+    }
+  });
 
   for (const advKey of touchedAdventures) {
     const hasUnfetchedContent = (state.adventureFilePaths?.[advKey]?.length || 0) > 0;
-    if (hasUnfetchedContent && isUnlocked()) {
+    if (!hasUnfetchedContent) continue;
+
+    const shouldFetchForReveal = revealTouchedAdventures.has(advKey);
+    if (isUnlocked() || shouldFetchForReveal) {
       await ensureAdventureLoaded(advKey);
     }
   }
+
+  urlState.reveal.forEach((path) => {
+    if (state.files.has(path) && isShareable(path)) {
+      state.revealedPaths.add(path);
+    } else if (state.files.has(path)) {
+      console.warn(
+        `Waylight: ?reveal pekar på "${path}", men sidan saknar delbar: true i sin frontmatter — ignoreras.`,
+      );
+    }
+  });
 
   const validPaths = urlState.tabs.filter((path) => state.files.has(path));
 
@@ -104,12 +133,17 @@ async function applyUrlState(urlState) {
     }
   }
 
-  if (validPaths.length > 0 || (urlState.active && state.activePath === urlState.active)) {
+  if (
+    validPaths.length > 0 ||
+    (urlState.active && state.activePath === urlState.active) ||
+    urlState.reveal.length > 0
+  ) {
     renderTabs();
     renderContent();
     renderLinkPane();
     refreshTreeActiveState();
     updateUndoButtonState();
+    buildTree();
   }
 
   if (urlState.pageSearch && state.activePath) {

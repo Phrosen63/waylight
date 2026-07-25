@@ -51,3 +51,35 @@
   margin: 0 0 24px;
   line-height: 1.2;
 }
+
+.share-reveal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  margin-bottom: 24px;
+  background: var(--surface);
+  border: 1px solid var(--accent-dim);
+  border-radius: 8px;
+  color: var(--accent);
+  font-family: var(--font-body);
+  font-size: var(--text-size-ui-base);
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+
+.share-reveal-btn:hover {
+  background: var(--accent-dim);
+  color: var(--bg);
+}
+
+.share-reveal-btn.copied {
+  border-color: var(--link);
+  color: var(--link);
+}
+
+.share-reveal-btn .btn-icon {
+  font-size: var(--text-size-ui-base);
+}

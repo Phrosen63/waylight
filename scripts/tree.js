@@ -302,7 +302,7 @@ function makeTreeItem(path) {
   const el = document.createElement('div');
   const file = state.files.get(path);
   const isConfidential = isConfidentialFile(path, file);
-  const showsAsLocked = isConfidential && !isUnlocked();
+  const showsAsLocked = isConfidential && !isUnlocked() && !isRevealedViaUrl(path);
 
   el.className = 'tree-item' + (showsAsLocked ? ' tree-item-confidential' : '');
   el.dataset.path = path;

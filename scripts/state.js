@@ -7,6 +7,7 @@ const state = {
   closedTabsHistory: [], // stack of { path, index } — most recently closed last, for undo (Ctrl+Z)
   adventureFilePaths: {}, // advKey -> [paths] not yet fetched (lazy adventure loading, see github.js)
   currentSha: null, // repo's current commit SHA, used for per-adventure cache keys
+  revealedPaths: new Set(), // paths explicitly unlocked via ?reveal=... in the URL (see url-state.js)
 };
 
 const TYPE_ICONS = {
@@ -99,6 +100,15 @@ function isConfidentialFile(path, file) {
   if (path.endsWith('aventyr.yaml')) return false;
   if (path.startsWith('aventyr/')) return true;
   return file?.frontmatter?.confidential === true;
+}
+
+function isShareable(path) {
+  const f = state.files.get(path);
+  return f?.frontmatter?.delbar === true;
+}
+
+function isRevealedViaUrl(path) {
+  return state.revealedPaths.has(path) && isShareable(path);
 }
 
 function detectNameCollisions() {
