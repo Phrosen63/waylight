@@ -288,7 +288,7 @@ async function ensureAdventureLoaded(advKey) {
 
   pendingAdventureLoads.add(advKey);
   try {
-    const result = await loadAdventureContent(advKey);
+    const result = await loadAdventureContent(advKey, state.isForceRefreshing);
     if (!result.ok) {
       console.warn(`Waylight: kunde inte läsa in äventyret ${advKey}:`, result.detail);
     }

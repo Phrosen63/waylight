@@ -6,6 +6,7 @@ const GITHUB_API_TREE_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITH
 const GITHUB_API_REF_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/refs/heads/${GITHUB_BRANCH}`;
 
 const CACHE_KEY = `waylight-cache:${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
+const CACHE_KEY_PREFIX = `waylight-cache:${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
 
 const CONTENT_ROOT_FOLDERS = ['regler', 'monster', 'karaktarer', 'foremal', 'aventyr'];
 
@@ -14,8 +15,9 @@ function isUnderContentRoot(path) {
   return CONTENT_ROOT_FOLDERS.includes(topLevel);
 }
 
-function rawFileUrl(path) {
-  return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${path}`;
+function rawFileUrl(path, cacheBust = false) {
+  const base = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${path}`;
+  return cacheBust ? `${base}?_=${Date.now()}` : base;
 }
 
 function isAdventureContentPath(path) {
@@ -53,6 +55,21 @@ function clearCache() {
     localStorage.removeItem(CACHE_KEY);
   } catch (e) {
     /* ignore */
+  }
+}
+
+function clearAllLocalCaches() {
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(CACHE_KEY_PREFIX)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+  } catch (e) {
+    console.warn('Waylight: kunde inte rensa all lokal cache:', e);
   }
 }
 
@@ -106,9 +123,9 @@ async function mapWithConcurrency(items, limit, fn) {
   return results;
 }
 
-async function fetchAndStoreFile(path) {
+async function fetchAndStoreFile(path, cacheBust = false) {
   try {
-    const res = await fetch(rawFileUrl(path));
+    const res = await fetch(rawFileUrl(path, cacheBust));
     if (!res.ok) {
       state.loadErrors.push(`Kunde inte hämta ${path} (status ${res.status}).`);
       return false;
@@ -141,6 +158,10 @@ async function fetchAndStoreFile(path) {
 
 async function loadFromGitHub(onProgress, forceRefresh = false) {
   state.loadErrors = [];
+
+  if (forceRefresh) {
+    clearAllLocalCaches();
+  }
 
   // ----- 0. Check current commit SHA against cache -----
   let currentSha = null;
@@ -208,6 +229,7 @@ async function loadFromGitHub(onProgress, forceRefresh = false) {
     );
   }
 
+  // ----- 2. Filter to relevant files, split into eager vs. lazy (adventure content) -----
   const allRelevant = (treeData.tree || []).filter(
     (entry) =>
       entry.type === 'blob' &&
@@ -237,7 +259,7 @@ async function loadFromGitHub(onProgress, forceRefresh = false) {
   // ----- 3. Fetch eager content only (bounded concurrency) -----
   let completed = 0;
   await mapWithConcurrency(eagerEntries, 8, async (entry) => {
-    await fetchAndStoreFile(entry.path);
+    await fetchAndStoreFile(entry.path, forceRefresh);
     completed++;
     if (onProgress) onProgress(completed, eagerEntries.length);
   });
@@ -258,14 +280,13 @@ async function loadFromGitHub(onProgress, forceRefresh = false) {
   return { ok: true, fromCache: false };
 }
 
-async function loadAdventureContent(advKey) {
+async function loadAdventureContent(advKey, forceRefresh = false) {
   const paths = state.adventureFilePaths?.[advKey];
   if (!paths || paths.length === 0) {
     return { ok: true, alreadyLoaded: true }; // nothing pending — either already loaded or adventure has no content files
   }
 
-  // Try the per-adventure cache first (only valid if repo hasn't changed since).
-  if (state.currentSha) {
+  if (state.currentSha && !forceRefresh) {
     const cached = readAdventureCache(advKey, state.currentSha);
     if (cached) {
       for (const [path, value] of Object.entries(cached)) {
@@ -278,7 +299,7 @@ async function loadAdventureContent(advKey) {
 
   const fetchedPaths = [];
   await mapWithConcurrency(paths, 8, async (path) => {
-    const success = await fetchAndStoreFile(path);
+    const success = await fetchAndStoreFile(path, forceRefresh);
     if (success) fetchedPaths.push(path);
   });
 

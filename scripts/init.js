@@ -58,42 +58,47 @@ function initUndoKeyboardShortcut() {
 
 async function loadAndRender(forceRefresh) {
   showLoadingScreen();
+  state.isForceRefreshing = forceRefresh;
 
-  const result = await loadFromGitHub((done, total) => {
-    showLoadingScreen(`Hämtat ${done} av ${total} filer…`);
-  }, forceRefresh);
+  try {
+    const result = await loadFromGitHub((done, total) => {
+      showLoadingScreen(`Hämtat ${done} av ${total} filer…`);
+    }, forceRefresh);
 
-  if (!result.ok) {
-    showErrorScreen(result.detail, state.loadErrors);
-    document.getElementById('status-pill').textContent = 'fel vid inläsning';
-    return;
+    if (!result.ok) {
+      showErrorScreen(result.detail, state.loadErrors);
+      document.getElementById('status-pill').textContent = 'fel vid inläsning';
+      return;
+    }
+
+    const statusPill = document.getElementById('status-pill');
+    if (result.fromCache) {
+      const age = Math.round((Date.now() - result.cachedAt) / 60000);
+      statusPill.textContent = age < 1 ? 'från cache' : `från cache (${age} min)`;
+    } else {
+      statusPill.textContent =
+        state.loadErrors.length > 0
+          ? `inläst (${state.loadErrors.length} varningar)`
+          : 'inläst från GitHub';
+    }
+
+    buildTree();
+    renderContent();
+    renderLinkPane();
+
+    if (!forceRefresh) {
+      const urlState = readUrlState();
+      await applyUrlState(urlState);
+    }
+
+    if (state.loadErrors.length > 0) {
+      console.warn('Waylight: fel vid inläsning av vissa filer:', state.loadErrors);
+    }
+
+    checkForNameCollisions();
+  } finally {
+    state.isForceRefreshing = false;
   }
-
-  const statusPill = document.getElementById('status-pill');
-  if (result.fromCache) {
-    const age = Math.round((Date.now() - result.cachedAt) / 60000);
-    statusPill.textContent = age < 1 ? 'från cache' : `från cache (${age} min)`;
-  } else {
-    statusPill.textContent =
-      state.loadErrors.length > 0
-        ? `inläst (${state.loadErrors.length} varningar)`
-        : 'inläst från GitHub';
-  }
-
-  buildTree();
-  renderContent();
-  renderLinkPane();
-
-  if (!forceRefresh) {
-    const urlState = readUrlState();
-    await applyUrlState(urlState);
-  }
-
-  if (state.loadErrors.length > 0) {
-    console.warn('Waylight: fel vid inläsning av vissa filer:', state.loadErrors);
-  }
-
-  checkForNameCollisions();
 }
 
 function checkForNameCollisions() {

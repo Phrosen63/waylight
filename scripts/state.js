@@ -8,6 +8,7 @@ const state = {
   adventureFilePaths: {}, // advKey -> [paths] not yet fetched (lazy adventure loading, see github.js)
   currentSha: null, // repo's current commit SHA, used for per-adventure cache keys
   revealedPaths: new Set(), // paths explicitly unlocked via ?reveal=... in the URL (see url-state.js)
+  isForceRefreshing: false, // true while a hard #refresh-btn reload is in progress; read by ensureAdventureLoaded (tree.js) to know whether to cache-bust/skip per-adventure cache
 };
 
 const TYPE_ICONS = {
