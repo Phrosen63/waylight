@@ -1,9 +1,10 @@
 const collapsedSections = new Set();
 
-const FOLDER_ORDER = ['platser', 'regler', 'monster', 'karaktarer', 'foremal'];
+const FOLDER_ORDER = ['platser', 'regler', 'klasser', 'monster', 'karaktarer', 'foremal'];
 const FOLDER_LABELS = {
   platser: 'Platser',
   regler: 'Regler',
+  klasser: 'Klasser',
   monster: 'Monster',
   karaktarer: 'Karaktärer',
   foremal: 'Föremål',

@@ -8,7 +8,7 @@ const GITHUB_API_REF_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHU
 const CACHE_KEY = `waylight-cache:${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
 const CACHE_KEY_PREFIX = `waylight-cache:${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
 
-const CONTENT_ROOT_FOLDERS = ['regler', 'monster', 'karaktarer', 'foremal', 'aventyr'];
+const CONTENT_ROOT_FOLDERS = ['regler', 'monster', 'karaktarer', 'foremal', 'klasser', 'aventyr'];
 
 function isUnderContentRoot(path) {
   const topLevel = path.split('/')[0];
@@ -244,8 +244,7 @@ async function loadFromGitHub(onProgress, forceRefresh = false) {
     return {
       ok: false,
       error: 'empty-repo',
-      detail:
-        'Repot innehåller inga .md- eller aventyr.yaml-filer under regler/, monster/, karaktarer/, foremal/ eller aventyr/.',
+      detail: 'Repot innehåller inga .md- eller aventyr.yaml-filer under regler/, monster/, karaktarer/, foremal/, klasser/ eller aventyr/.',
     };
   }
 

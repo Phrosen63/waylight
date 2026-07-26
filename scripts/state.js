@@ -17,6 +17,7 @@ const TYPE_ICONS = {
   karaktär: '☺',
   plats: '⌂',
   föremål: '◆',
+  klass: '✦',
   default: '•',
 };
 
@@ -54,7 +55,7 @@ function resolveLink(key, fromPath) {
     }
   }
 
-  const globalFolders = ['regler', 'monster', 'karaktarer', 'foremal'];
+  const globalFolders = ['regler', 'monster', 'karaktarer', 'foremal', 'klasser'];
   for (const folder of globalFolders) {
     for (const [path, file] of state.files) {
       if (file.isProject) continue;
