@@ -1,16 +1,77 @@
+function extractNestedTags(text) {
+  const tagPattern = /\{\.([a-zA-Z0-9_-]+)\}|\{\/\}/g;
+  const tags = [];
+
+  const stack = [];
+
+  let result = '';
+  let cursor = 0; // hur långt i `text` vi kopierat till result hittills
+
+  let match;
+  while ((match = tagPattern.exec(text)) !== null) {
+    const isOpenTag = match[0] !== '{/}';
+
+    if (isOpenTag) {
+      const className = match[1];
+      stack.push({
+        className,
+        contentStart: tagPattern.lastIndex, // texten EFTER {.klass}
+        segments: [],
+      });
+
+      const textBeforeThisTag = text.slice(cursor, match.index);
+      if (stack.length > 1) {
+        stack[stack.length - 2].segments.push(textBeforeThisTag);
+      } else {
+        result += textBeforeThisTag;
+      }
+      cursor = tagPattern.lastIndex;
+    } else {
+      if (stack.length === 0) {
+        continue;
+      }
+
+      const closed = stack.pop();
+      const textInsideThisTag = text.slice(cursor, match.index);
+      closed.segments.push(textInsideThisTag);
+      const innerText = closed.segments.join('');
+
+      const token = `\u0000TAG${tags.length}\u0000`;
+      tags.push({ className: closed.className, inner: innerText.trim() });
+
+      cursor = tagPattern.lastIndex;
+
+      if (stack.length > 0) {
+        stack[stack.length - 1].segments.push(token);
+      } else {
+        result += token;
+      }
+    }
+  }
+
+  const remainingText = text.slice(cursor);
+  if (stack.length > 0) {
+    stack[stack.length - 1].segments.push(remainingText);
+    while (stack.length > 1) {
+      const inner = stack.pop();
+      stack[stack.length - 1].segments.push(inner.segments.join(''));
+    }
+    result += stack[0].segments.join('');
+  } else {
+    result += remainingText;
+  }
+
+  return { text: result, tags };
+}
+
 function renderMarkdown(file) {
   const currentPath = file.path;
 
-  const tagBlocks = [];
-  let body = file.body.replace(
-    /\{\.([a-zA-Z0-9_-]+)\}([\s\S]*?)\{\/\}/g,
-    (match, className, inner) => {
-      const token = `\u0000TAG${tagBlocks.length}\u0000`;
-      tagBlocks.push({ className, inner: inner.trim() });
-      return token;
-    },
-  );
+  // ----- Steg 1: extrahera {.klass}...{/} (med stöd för nästling) till platshållare -----
+  const { text: bodyWithTokens, tags: tagBlocks } = extractNestedTags(file.body);
+  let body = bodyWithTokens;
 
+  // ----- Steg 2: wikilänkar -----
   body = body.replace(/\[\[([^\]]+)\]\]/g, (match, key) => {
     const trimmedKey = key.trim();
     const resolved = resolveLink(trimmedKey, currentPath);
@@ -42,29 +103,39 @@ function renderMarkdown(file) {
 
   let html = marked.parse(body, { renderer });
 
-  tagBlocks.forEach((tag, i) => {
-    const token = `\u0000TAG${i}\u0000`;
-    let replacement;
+  function renderTagInner(inner) {
+    let innerHtml = marked.parse(inner, { renderer });
+    return resolveTagTokens(innerHtml);
+  }
 
-    const isLockableTag = tag.className === 'spelledare' || tag.className === 'konfidentiellt';
+  function resolveTagTokens(htmlFragment) {
+    let out = htmlFragment;
+    tagBlocks.forEach((tag, i) => {
+      const token = `\u0000TAG${i}\u0000`;
+      if (!out.includes(token)) return; // denna tagg hör inte hemma på denna nivå
 
-    if (isLockableTag && !isUnlocked()) {
-      replacement = `<div class="md-tag md-tag-locked-notice">🔒 SL: Låst innehåll, lås upp för att visa.</div>`;
-    } else if (tag.className === 'konfidentiellt') {
-      // Upplåst: rendera innehållet normalt, ingen ram/wrapper alls
-      replacement = marked.parse(tag.inner, { renderer });
-    } else {
-      const innerHtml = marked.parse(tag.inner, { renderer });
-      replacement = `<div class="md-tag md-tag-${tag.className}">${innerHtml}</div>`;
-    }
+      const isLockableTag = tag.className === 'spelledare' || tag.className === 'konfidentiellt';
+      let replacement;
 
-    const wrappedInP = new RegExp(`<p>\\s*${token}\\s*</p>`);
-    if (wrappedInP.test(html)) {
-      html = html.replace(wrappedInP, replacement);
-    } else {
-      html = html.replace(token, replacement);
-    }
-  });
+      if (isLockableTag && !isUnlocked()) {
+        replacement = `<div class="md-tag md-tag-locked-notice">🔒 SL: Låst innehåll, lås upp för att visa.</div>`;
+      } else if (tag.className === 'konfidentiellt') {
+        replacement = renderTagInner(tag.inner);
+      } else {
+        replacement = `<div class="md-tag md-tag-${tag.className}">${renderTagInner(tag.inner)}</div>`;
+      }
+
+      const wrappedInP = new RegExp(`<p>\\s*${token}\\s*</p>`);
+      if (wrappedInP.test(out)) {
+        out = out.replace(wrappedInP, replacement);
+      } else {
+        out = out.replace(token, replacement);
+      }
+    });
+    return out;
+  }
+
+  html = resolveTagTokens(html);
 
   return html;
 }
