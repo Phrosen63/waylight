@@ -1,5 +1,22 @@
-function openTab(path) {
-  if (!state.openTabs.includes(path)) {
+function getScrollContainer() {
+  return document.getElementById('content-scroll');
+}
+
+function saveScrollPositionFor(path) {
+  if (!path) return;
+  const container = getScrollContainer();
+  if (!container) return;
+  state.scrollPositions.set(path, container.scrollTop);
+}
+
+function openTab(path, { skipScrollRestore = false } = {}) {
+  const wasAlreadyOpen = state.openTabs.includes(path);
+
+  if (state.activePath && state.activePath !== path) {
+    saveScrollPositionFor(state.activePath);
+  }
+
+  if (!wasAlreadyOpen) {
     state.openTabs.push(path);
   }
   state.activePath = path;
@@ -8,6 +25,20 @@ function openTab(path) {
   renderLinkPane();
   refreshTreeActiveState();
   scheduleUrlStateWrite();
+
+  if (!skipScrollRestore) {
+    const container = getScrollContainer();
+    if (container) {
+      if (wasAlreadyOpen && state.scrollPositions.has(path)) {
+        container.scrollTop = state.scrollPositions.get(path);
+      } else {
+        if (!wasAlreadyOpen) {
+          state.scrollPositions.delete(path);
+        }
+        container.scrollTop = 0;
+      }
+    }
+  }
 }
 
 function closeTab(path, event) {
@@ -15,8 +46,15 @@ function closeTab(path, event) {
   const idx = state.openTabs.indexOf(path);
   if (idx === -1) return;
 
-  state.closedTabsHistory.push({ path, index: idx });
+  if (path === state.activePath) {
+    const container = getScrollContainer();
+    if (container) {
+      state.closedTabScrollPositions.set(path, container.scrollTop);
+    }
+  }
 
+  state.scrollPositions.delete(path);
+  state.closedTabsHistory.push({ path, index: idx });
   state.openTabs.splice(idx, 1);
 
   if (state.activePath === path) {
@@ -32,6 +70,15 @@ function closeTab(path, event) {
   refreshTreeActiveState();
   updateUndoButtonState();
   scheduleUrlStateWrite();
+
+  const container = getScrollContainer();
+  if (container) {
+    if (state.activePath && state.scrollPositions.has(state.activePath)) {
+      container.scrollTop = state.scrollPositions.get(state.activePath);
+    } else {
+      container.scrollTop = 0;
+    }
+  }
 }
 
 function undoCloseTab() {
@@ -43,6 +90,10 @@ function undoCloseTab() {
 
     const insertAt = Math.min(index, state.openTabs.length);
     state.openTabs.splice(insertAt, 0, path);
+
+    if (state.activePath && state.activePath !== path) {
+      saveScrollPositionFor(state.activePath);
+    }
     state.activePath = path;
 
     renderTabs();
@@ -51,6 +102,16 @@ function undoCloseTab() {
     refreshTreeActiveState();
     updateUndoButtonState();
     scheduleUrlStateWrite();
+
+    const container = getScrollContainer();
+    if (container) {
+      if (state.closedTabScrollPositions.has(path)) {
+        container.scrollTop = state.closedTabScrollPositions.get(path);
+        state.closedTabScrollPositions.delete(path);
+      } else {
+        container.scrollTop = 0;
+      }
+    }
     return;
   }
   updateUndoButtonState(); // history exhausted, ensure button reflects disabled state
