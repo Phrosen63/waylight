@@ -55,3 +55,24 @@
   font-style: italic;
   color: var(--text-dim);
 }
+
+.md-tag-exempel {
+  display: block;
+  background: rgba(146, 189, 142, 0.08);
+  border-left: 3px solid var(--link);
+  border-radius: 4px;
+  padding: 8px 16px;
+  color: var(--text-dim);
+  font-size: var(--text-size-content-sm);
+}
+
+.md-tag-exempel::before {
+  content: 'Exempel: ';
+  font-family: var(--font-mono);
+  font-size: var(--text-size-ui-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--link);
+  display: block;
+  margin-bottom: 4px;
+}
