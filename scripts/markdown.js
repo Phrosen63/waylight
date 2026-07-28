@@ -72,16 +72,21 @@ function renderMarkdown(file) {
   let body = bodyWithTokens;
 
   // ----- Steg 2: wikilänkar -----
-  body = body.replace(/\[\[([^\]]+)\]\]/g, (match, key) => {
-    const trimmedKey = key.trim();
+  body = body.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, rawKey, rawDisplayText) => {
+    const trimmedKey = rawKey.trim();
+    const customDisplayText = rawDisplayText ? rawDisplayText.trim() : null;
     const resolved = resolveLink(trimmedKey, currentPath);
+
     if (typeof resolved === 'string') {
-      return `[${getDisplayName(resolved)}](#${encodeURIComponent(resolved)})`;
+      const displayText = customDisplayText || getDisplayName(resolved);
+      return `[${displayText}](#${encodeURIComponent(resolved)})`;
     }
     if (resolved && resolved.locked) {
-      return `<span class="wikilink-locked" data-locked-key="${resolved.key}" data-locked-adventure="${resolved.adventureKey}" title="I det låsta äventyret &quot;${resolved.adventureName}&quot;">🔒 ${trimmedKey}</span>`;
+      const displayText = customDisplayText || trimmedKey;
+      return `<span class="wikilink-locked" data-locked-key="${resolved.key}" data-locked-adventure="${resolved.adventureKey}" title="I det låsta äventyret &quot;${resolved.adventureName}&quot;">🔒 ${displayText}</span>`;
     }
-    return `<span class="link-missing-text" title="Länk saknas: ${key}">${key}</span>`;
+    const displayText = customDisplayText || rawKey;
+    return `<span class="link-missing-text" title="Länk saknas: ${trimmedKey}">${displayText}</span>`;
   });
 
   const renderer = new marked.Renderer();
