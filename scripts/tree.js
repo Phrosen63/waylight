@@ -14,6 +14,72 @@ function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function buildFolderTree(paths, skipSegments) {
+  const root = { files: [], folders: {} };
+
+  paths.forEach((path) => {
+    const parts = path.split('/').slice(skipSegments); // resten efter skip-prefixet
+    const folderParts = parts.slice(0, -1); // alla mappsegment, utan filnamnet
+    let node = root;
+    folderParts.forEach((folderName) => {
+      if (!node.folders[folderName]) {
+        node.folders[folderName] = { files: [], folders: {} };
+      }
+      node = node.folders[folderName];
+    });
+    node.files.push(path);
+  });
+
+  return root;
+}
+
+function renderFolderNode(node, container, sectionIdPrefix, isSearching, depth = 0) {
+  const orderedFolderNames =
+    depth === 0
+      ? [
+          ...FOLDER_ORDER.filter((f) => node.folders[f]),
+          ...Object.keys(node.folders)
+            .filter((f) => !FOLDER_ORDER.includes(f))
+            .sort(),
+        ]
+      : Object.keys(node.folders).sort();
+
+  orderedFolderNames.forEach((folderName) => {
+    const childNode = node.folders[folderName];
+    const subSectionId = `${sectionIdPrefix}:${folderName}`;
+    const isCollapsed = isSearching ? false : collapsedSections.has(subSectionId);
+
+    const labelEl = document.createElement('div');
+    const labelClass = depth === 0 ? 'tree-folder tree-folder-fixed' : 'tree-folder tree-folder-sub';
+    labelEl.className = labelClass + (isCollapsed ? ' collapsed' : '');
+    const labelText =
+      depth === 0 ? FOLDER_LABELS[folderName] || capitalize(folderName) : capitalize(folderName);
+    labelEl.innerHTML = `<span class="chevron">▾</span> ${labelText}`;
+
+    const nested = document.createElement('div');
+    nested.className = 'tree-nested' + (isCollapsed ? ' collapsed' : '');
+
+    renderFolderNode(childNode, nested, subSectionId, isSearching, depth + 1);
+    childNode.files.sort().forEach((path) => nested.appendChild(makeTreeItem(path)));
+
+    labelEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const nowCollapsed = labelEl.classList.toggle('collapsed');
+      nested.classList.toggle('collapsed');
+      if (nowCollapsed) collapsedSections.add(subSectionId);
+      else collapsedSections.delete(subSectionId);
+    });
+
+    container.appendChild(labelEl);
+    container.appendChild(nested);
+  });
+}
+
+function folderNodeHasAnyFiles(node) {
+  if (node.files.length > 0) return true;
+  return Object.values(node.folders).some(folderNodeHasAnyFiles);
+}
+
 function buildTree() {
   const pane = document.getElementById('tree-pane');
   pane.innerHTML = '';
@@ -67,8 +133,8 @@ function renderTreeBody(treeBody, query) {
   treeBody.innerHTML = '';
   const isSearching = query.length > 0;
 
-  const globalFolders = {};
-  const adventures = {};
+  const globalFolders = {}; // topLevelFolderName -> paths[]
+  const adventures = {}; // advKey -> paths[]
 
   for (const [path, file] of state.files) {
     if (file.isProject) continue;
@@ -104,48 +170,9 @@ function renderTreeBody(treeBody, query) {
     const nested = document.createElement('div');
     nested.className = 'tree-nested' + (isCollapsed ? ' collapsed' : '');
 
-    const subfolders = {};
-    const looseFiles = []; // files directly in the folder root, no subfolder
-
-    globalFolders[folder].forEach((path) => {
-      const parts = path.split('/'); // [folder, ...maybe-subfolder, filename]
-      if (parts.length > 2) {
-        const subfolder = parts[1];
-        if (!subfolders[subfolder]) subfolders[subfolder] = [];
-        subfolders[subfolder].push(path);
-      } else {
-        looseFiles.push(path);
-      }
-    });
-
-    const orderedSubfolders = Object.keys(subfolders).sort();
-
-    for (const subfolder of orderedSubfolders) {
-      const subSectionId = `${sectionId}:${subfolder}`;
-      const subCollapsed = isSearching ? false : collapsedSections.has(subSectionId);
-
-      const subLabelEl = document.createElement('div');
-      subLabelEl.className = 'tree-folder tree-folder-sub' + (subCollapsed ? ' collapsed' : '');
-      subLabelEl.innerHTML = `<span class="chevron">▾</span> ${capitalize(subfolder)}`;
-
-      const subNested = document.createElement('div');
-      subNested.className = 'tree-nested' + (subCollapsed ? ' collapsed' : '');
-      subfolders[subfolder].sort().forEach((path) => subNested.appendChild(makeTreeItem(path)));
-
-      subLabelEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const nowCollapsed = subLabelEl.classList.toggle('collapsed');
-        subNested.classList.toggle('collapsed');
-        if (nowCollapsed) collapsedSections.add(subSectionId);
-        else collapsedSections.delete(subSectionId);
-      });
-
-      nested.appendChild(subLabelEl);
-      nested.appendChild(subNested);
-    }
-
-    // Files directly in the folder root (no subfolder) render as plain items
-    looseFiles.sort().forEach((path) => nested.appendChild(makeTreeItem(path)));
+    const folderTree = buildFolderTree(globalFolders[folder], 1);
+    renderFolderNode(folderTree, nested, sectionId, isSearching, 0);
+    folderTree.files.sort().forEach((path) => nested.appendChild(makeTreeItem(path)));
 
     labelEl.addEventListener('click', () => {
       const nowCollapsed = labelEl.classList.toggle('collapsed');
@@ -214,50 +241,9 @@ function renderTreeBody(treeBody, query) {
       const nested = document.createElement('div');
       nested.className = 'tree-nested' + (isCollapsed ? ' collapsed' : '');
 
-      const subfolders = {};
-      const looseFiles = []; // files directly under the adventure root, if any
-
-      (adventures[advKey] || []).forEach((path) => {
-        const parts = path.split('/'); // ["aventyr", advKey, subfolder, ...rest]
-        if (parts.length > 3) {
-          const subfolder = parts[2];
-          if (!subfolders[subfolder]) subfolders[subfolder] = [];
-          subfolders[subfolder].push(path);
-        } else {
-          looseFiles.push(path);
-        }
-      });
-
-      const orderedSubfolders = [
-        ...FOLDER_ORDER.filter((f) => subfolders[f]),
-        ...Object.keys(subfolders).filter((f) => !FOLDER_ORDER.includes(f)),
-      ];
-
-      for (const subfolder of orderedSubfolders) {
-        const subSectionId = `${sectionId}:${subfolder}`;
-        const subCollapsed = isSearching ? false : collapsedSections.has(subSectionId);
-
-        const subLabelEl = document.createElement('div');
-        subLabelEl.className = 'tree-folder tree-folder-sub' + (subCollapsed ? ' collapsed' : '');
-        subLabelEl.innerHTML = `<span class="chevron">▾</span> ${FOLDER_LABELS[subfolder] || capitalize(subfolder)}`;
-
-        const subNested = document.createElement('div');
-        subNested.className = 'tree-nested' + (subCollapsed ? ' collapsed' : '');
-        subfolders[subfolder].sort().forEach((path) => subNested.appendChild(makeTreeItem(path)));
-
-        subLabelEl.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const nowCollapsed = subLabelEl.classList.toggle('collapsed');
-          subNested.classList.toggle('collapsed');
-          if (nowCollapsed) collapsedSections.add(subSectionId);
-          else collapsedSections.delete(subSectionId);
-        });
-
-        nested.appendChild(subLabelEl);
-        nested.appendChild(subNested);
-      }
-
-      looseFiles.sort().forEach((path) => nested.appendChild(makeTreeItem(path)));
+      const folderTree = buildFolderTree(adventures[advKey] || [], 2);
+      renderFolderNode(folderTree, nested, sectionId, isSearching, 0);
+      folderTree.files.sort().forEach((path) => nested.appendChild(makeTreeItem(path)));
 
       folderEl.addEventListener('click', () => {
         const nowCollapsed = folderEl.classList.toggle('collapsed');
