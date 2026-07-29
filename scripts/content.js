@@ -136,7 +136,8 @@ function renderContent() {
     tocHtml = renderTocHtml(extracted.tocEntries);
   }
 
-  const shareButtonHtml = isShareable(state.activePath) ? renderShareButtonHtml() : '';
+  const shareButtonHtml =
+    isShareable(state.activePath) && isUnlocked() ? renderShareButtonHtml() : '';
 
   scroll.innerHTML = `
     <div class="content-inner">
@@ -147,7 +148,7 @@ function renderContent() {
       <div class="doc-body">${html}</div>
     </div>`;
 
-  if (isShareable(state.activePath)) {
+  if (isShareable(state.activePath) && isUnlocked()) {
     attachShareButtonHandler(state.activePath);
   }
 
