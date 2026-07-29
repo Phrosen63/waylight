@@ -119,12 +119,19 @@ function renderMarkdown(file) {
       const token = `\u0000TAG${i}\u0000`;
       if (!out.includes(token)) return; // denna tagg hör inte hemma på denna nivå
 
-      const isLockableTag = tag.className === 'spelledare' || tag.className === 'konfidentiellt';
+      const isSpelledare = tag.className === 'spelledare';
+      const isKonfidentiellt = tag.className === 'konfidentiellt';
+      const isLockableTag = isSpelledare || isKonfidentiellt;
+
+      const isUnlockedForThisTag = isSpelledare
+        ? isUnlocked()
+        : isUnlocked() || isRevealedViaUrl(currentPath);
+
       let replacement;
 
-      if (isLockableTag && !isUnlocked()) {
+      if (isLockableTag && !isUnlockedForThisTag) {
         replacement = `<div class="md-tag md-tag-locked-notice">🔒 SL: Låst innehåll, lås upp för att visa.</div>`;
-      } else if (tag.className === 'konfidentiellt') {
+      } else if (isKonfidentiellt) {
         replacement = renderTagInner(tag.inner);
       } else {
         replacement = `<div class="md-tag md-tag-${tag.className}">${renderTagInner(tag.inner)}</div>`;

@@ -47,9 +47,9 @@ function renderTocHtml(tocEntries) {
 
 function buildRevealUrl(path) {
   const params = new URLSearchParams();
-  params.set('tabs', encodeURIComponent(path));
-  params.set('active', encodeURIComponent(path));
-  params.set('reveal', encodeURIComponent(path));
+  params.set('tabs', path);
+  params.set('active', path);
+  params.set('reveal', path);
   return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 }
 

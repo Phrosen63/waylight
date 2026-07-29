@@ -9,12 +9,12 @@ function readUrlState() {
   const tabs = tabsParam
     ? tabsParam
         .split(',')
-        .map((p) => decodeURIComponent(p.trim()))
+        .map((p) => p.trim())
         .filter(Boolean)
     : [];
 
   const activeParam = params.get('active');
-  const active = activeParam ? decodeURIComponent(activeParam) : null;
+  const active = activeParam || null;
 
   const search = params.get('search') || '';
   const pageSearch = params.get('page_search') || '';
@@ -23,7 +23,7 @@ function readUrlState() {
   const reveal = revealParam
     ? revealParam
         .split(',')
-        .map((p) => decodeURIComponent(p.trim()))
+        .map((p) => p.trim())
         .filter(Boolean)
     : [];
 
@@ -34,11 +34,11 @@ function writeUrlStateNow() {
   const params = new URLSearchParams();
 
   if (state.openTabs.length > 0) {
-    params.set('tabs', state.openTabs.map((p) => encodeURIComponent(p)).join(','));
+    params.set('tabs', state.openTabs.join(','));
   }
 
   if (state.activePath) {
-    params.set('active', encodeURIComponent(state.activePath));
+    params.set('active', state.activePath);
   }
 
   const treeSearchInput = document.getElementById('tree-search');
