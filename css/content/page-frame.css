@@ -1,4 +1,5 @@
 .content-scroll {
+  position: relative;
   flex: 1;
   overflow-y: auto;
   background: var(--surface);
@@ -53,11 +54,13 @@
 }
 
 .share-reveal-btn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  margin-bottom: 24px;
   background: var(--surface);
   border: 1px solid var(--accent-dim);
   border-radius: 8px;
@@ -68,6 +71,13 @@
   transition:
     background 0.12s,
     color 0.12s;
+}
+
+@media (max-width: 900px) {
+  .share-reveal-btn {
+    position: static;
+    margin-bottom: 24px;
+  }
 }
 
 .share-reveal-btn:hover {
