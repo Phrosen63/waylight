@@ -95,6 +95,9 @@ function renderContent() {
         <h2>Ingen sida öppen</h2>
         <p>Välj en fil i trädet till vänster för att börja bläddra i ditt äventyr.</p>
       </div>`;
+    if (typeof updateScrollTopButtonVisibility === 'function') {
+      updateScrollTopButtonVisibility();
+    }
     return;
   }
 
@@ -182,4 +185,8 @@ function renderContent() {
   });
 
   resetPageSearch();
+
+  if (typeof updateScrollTopButtonVisibility === 'function') {
+    updateScrollTopButtonVisibility();
+  }
 }

@@ -35,6 +35,7 @@ async function init() {
   initPageSearch();
   initMasterLock();
   initUrlStateSync();
+  initScrollTopButton();
   document.getElementById('refresh-btn').addEventListener('click', () => loadAndRender(true));
   document.getElementById('undo-btn').addEventListener('click', undoCloseTab);
   initUndoKeyboardShortcut();

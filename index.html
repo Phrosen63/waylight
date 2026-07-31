@@ -10,14 +10,14 @@
       rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
-    <link rel="stylesheet" href="css/styles.css" />
-    <link rel="icon" type="image/svg+xml" href="resources/favicon/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="32x32" href="resources/favicon/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="resources/favicon/favicon-16x16.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="resources/favicon/apple-touch-icon.png" />
-    <link rel="manifest" href="resources/favicon/site.webmanifest" />
-    <link rel="shortcut icon" href="resources/favicon/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
+    <link rel="shortcut icon" href="favicon.ico" />
     <meta name="theme-color" content="#2b2620" />
+    <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
     <div class="topbar">
@@ -94,8 +94,14 @@
           <button class="page-search-nav" id="page-search-next" title="Nästa träff">↓</button>
         </div>
         <div class="content-scroll" id="content-scroll"></div>
+        <button
+          class="scroll-top-btn"
+          id="scroll-top-btn"
+          title="Scrolla till toppen"
+          aria-label="Scrolla till toppen">
+          ↑
+        </button>
       </div>
-
       <div class="link-pane" id="link-pane"></div>
     </div>
 
@@ -110,6 +116,7 @@
     <script src="scripts/link-pane.js"></script>
     <script src="scripts/responsive.js"></script>
     <script src="scripts/url-state.js"></script>
+    <script src="scripts/scroll-top.js"></script>
     <script src="scripts/init.js"></script>
   </body>
 </html>

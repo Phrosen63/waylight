@@ -39,6 +39,10 @@ function openTab(path, { skipScrollRestore = false } = {}) {
       }
     }
   }
+
+  if (typeof updateScrollTopButtonVisibility === 'function') {
+    updateScrollTopButtonVisibility();
+  }
 }
 
 function closeTab(path, event) {
@@ -52,9 +56,10 @@ function closeTab(path, event) {
       state.closedTabScrollPositions.set(path, container.scrollTop);
     }
   }
-
   state.scrollPositions.delete(path);
+
   state.closedTabsHistory.push({ path, index: idx });
+
   state.openTabs.splice(idx, 1);
 
   if (state.activePath === path) {
@@ -78,6 +83,10 @@ function closeTab(path, event) {
     } else {
       container.scrollTop = 0;
     }
+  }
+
+  if (typeof updateScrollTopButtonVisibility === 'function') {
+    updateScrollTopButtonVisibility();
   }
 }
 
@@ -111,6 +120,10 @@ function undoCloseTab() {
       } else {
         container.scrollTop = 0;
       }
+    }
+
+    if (typeof updateScrollTopButtonVisibility === 'function') {
+      updateScrollTopButtonVisibility();
     }
     return;
   }
