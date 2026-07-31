@@ -108,6 +108,8 @@ function renderMarkdown(file) {
 
   let html = marked.parse(body, { renderer });
 
+  const INLINE_ONLY_TAG_CLASSES = new Set(['nyckelord']);
+
   function renderTagInner(inner) {
     let innerHtml = marked.parse(inner, { renderer });
     return resolveTagTokens(innerHtml);
@@ -118,6 +120,12 @@ function renderMarkdown(file) {
     tagBlocks.forEach((tag, i) => {
       const token = `\u0000TAG${i}\u0000`;
       if (!out.includes(token)) return; // denna tagg hör inte hemma på denna nivå
+
+      if (INLINE_ONLY_TAG_CLASSES.has(tag.className)) {
+        const replacement = `<span class="md-tag md-tag-${tag.className}">${tag.inner}</span>`;
+        out = out.replace(token, replacement);
+        return;
+      }
 
       const isSpelledare = tag.className === 'spelledare';
       const isKonfidentiellt = tag.className === 'konfidentiellt';

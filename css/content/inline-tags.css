@@ -76,3 +76,9 @@
   display: block;
   margin-bottom: 4px;
 }
+
+.md-tag-nyckelord {
+  color: var(--accent);
+  font-weight: 600;
+  padding: 0;
+}
