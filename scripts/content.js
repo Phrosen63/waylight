@@ -9,39 +9,73 @@ function slugify(text) {
     .replace(/-+/g, '-');
 }
 
-function extractTocFromHtml(html) {
+function normalizeTocLevels(rawValue) {
+  const DEFAULT_LEVELS = [2];
+  if (!Array.isArray(rawValue) || rawValue.length === 0) return DEFAULT_LEVELS;
+
+  const validLevels = [...new Set(rawValue)]
+    .map((n) => Number(n))
+    .filter((n) => Number.isInteger(n) && n >= 1 && n <= 6)
+    .sort((a, b) => a - b);
+
+  return validLevels.length > 0 ? validLevels : DEFAULT_LEVELS;
+}
+
+function extractTocFromHtml(html, levels) {
   const container = document.createElement('div');
   container.innerHTML = html;
 
-  const seenSlugs = new Map();
-  const tocEntries = [];
+  const selector = levels.map((l) => `h${l}`).join(', ');
+  const headingEls = container.querySelectorAll(selector);
 
-  container.querySelectorAll('h2').forEach((h2) => {
-    const text = h2.textContent.trim();
+  const seenSlugs = new Map();
+  const root = []; // toppnivå-entries (lägsta numeriska nivån i `levels`, t.ex. H2 om levels=[2,3])
+  const stack = []; // stack av { level, node } för att hitta rätt förälder
+
+  headingEls.forEach((el) => {
+    const level = parseInt(el.tagName.slice(1), 10); // "H2" -> 2
+    const text = el.textContent.trim();
     let slug = slugify(text) || 'sektion';
     const count = seenSlugs.get(slug) || 0;
     seenSlugs.set(slug, count + 1);
     if (count > 0) slug = `${slug}-${count + 1}`;
 
-    h2.id = slug;
-    tocEntries.push({ id: slug, text });
+    el.id = slug;
+    const node = { id: slug, text, level, children: [] };
+
+    while (stack.length > 0 && stack[stack.length - 1].level >= level) {
+      stack.pop();
+    }
+
+    if (stack.length === 0) {
+      root.push(node);
+    } else {
+      stack[stack.length - 1].node.children.push(node);
+    }
+    stack.push({ level, node });
   });
 
-  return { html: container.innerHTML, tocEntries };
+  return { html: container.innerHTML, tocEntries: root };
+}
+
+function renderTocEntries(entries) {
+  return entries
+    .map((entry) => {
+      const childrenHtml =
+        entry.children.length > 0
+          ? `<ul class="doc-toc-list">${renderTocEntries(entry.children)}</ul>`
+          : '';
+      return `<li><a href="#" class="toc-link" data-anchor="${entry.id}">${entry.text}</a>${childrenHtml}</li>`;
+    })
+    .join('');
 }
 
 function renderTocHtml(tocEntries) {
   if (tocEntries.length === 0) return '';
-  const items = tocEntries
-    .map(
-      (entry) =>
-        `<li><a href="#" class="toc-link" data-anchor="${entry.id}">${entry.text}</a></li>`,
-    )
-    .join('');
   return `
     <nav class="doc-toc">
       <div class="doc-toc-title">Innehåll</div>
-      <ul class="doc-toc-list">${items}</ul>
+      <ul class="doc-toc-list">${renderTocEntries(tocEntries)}</ul>
     </nav>`;
 }
 
@@ -134,7 +168,8 @@ function renderContent() {
 
   let tocHtml = '';
   if (file.frontmatter?.toc === true) {
-    const extracted = extractTocFromHtml(html);
+    const tocLevels = normalizeTocLevels(file.frontmatter?.toc_nivaer);
+    const extracted = extractTocFromHtml(html, tocLevels);
     html = extracted.html;
     tocHtml = renderTocHtml(extracted.tocEntries);
   }

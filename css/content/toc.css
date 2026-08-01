@@ -2,12 +2,12 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 14px 20px;
-  margin: 0 0 30px;
+  padding: 16px 24px;
+  margin: 0 0 32px;
 }
 
 .doc-toc-title {
-  font-size: 11px;
+  font-size: var(--text-size-ui-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-faint);
@@ -24,7 +24,7 @@
 }
 
 .doc-toc-list li {
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   break-inside: avoid;
 }
 
@@ -32,13 +32,29 @@
   color: var(--link);
   text-decoration: none;
   border-bottom: none;
-  font-size: 13.5px;
+  font-size: 16px;
   cursor: pointer;
 }
 
 .doc-toc-list a.toc-link:hover {
   color: var(--link-hover);
   text-decoration: underline;
+}
+
+.doc-toc-list .doc-toc-list {
+  columns: 1;
+  margin: 8px 0 0 16px;
+  padding-left: 16px;
+  border-left: 1px solid var(--border);
+}
+
+.doc-toc-list .doc-toc-list a.toc-link {
+  font-size: var(--text-size-ui-sm);
+  color: var(--text-dim);
+}
+
+.doc-toc-list .doc-toc-list a.toc-link:hover {
+  color: var(--link);
 }
 
 @media (max-width: 620px) {
