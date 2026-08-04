@@ -138,6 +138,7 @@ function renderTreeBody(treeBody, query) {
 
   for (const [path, file] of state.files) {
     if (file.isProject) continue;
+    if (path === EXAMPLE_PAGE_PATH) continue;
     if (!fileMatchesQuery(path, file, query)) continue;
 
     const parts = path.split('/');
