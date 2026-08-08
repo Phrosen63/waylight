@@ -1,5 +1,5 @@
 function extractNestedTags(text) {
-  const tagPattern = /\{\.([a-zA-Z0-9_-]+)\}|\{\/\}/g;
+  const tagPattern = /\{\.([a-zA-ZåäöÅÄÖ0-9_-]+)\}|\{\/\}/g;
   const tags = [];
 
   const stack = [];
@@ -64,6 +64,42 @@ function extractNestedTags(text) {
   return { text: result, tags };
 }
 
+const INLINE_SUFFIX = '-inline';
+const ALWAYS_INLINE_CLASSES = new Set(['nyckelord']);
+const RAW_BASE_CLASS = 'rå';
+
+function parseTagClassName(rawClassName) {
+  if (rawClassName.endsWith(INLINE_SUFFIX)) {
+    return {
+      baseClass: rawClassName.slice(0, -INLINE_SUFFIX.length),
+      forceInline: true,
+    };
+  }
+  return { baseClass: rawClassName, forceInline: false };
+}
+
+function isTagInline(rawClassName) {
+  const { baseClass, forceInline } = parseTagClassName(rawClassName);
+  if (ALWAYS_INLINE_CLASSES.has(baseClass)) return true;
+  return forceInline;
+}
+
+function reconstructRawSource(inner, tagBlocks) {
+  return inner.replace(/\u0000TAG(\d+)\u0000/g, (m, idxStr) => {
+    const nested = tagBlocks[Number(idxStr)];
+    if (!nested) return m;
+    return `{.${nested.className}}${reconstructRawSource(nested.inner, tagBlocks)}{/}`;
+  });
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function renderMarkdown(file) {
   const currentPath = file.path;
 
@@ -108,8 +144,6 @@ function renderMarkdown(file) {
 
   let html = marked.parse(body, { renderer });
 
-  const INLINE_ONLY_TAG_CLASSES = new Set(['nyckelord']);
-
   function renderTagInner(inner) {
     let innerHtml = marked.parse(inner, { renderer });
     return resolveTagTokens(innerHtml);
@@ -121,14 +155,28 @@ function renderMarkdown(file) {
       const token = `\u0000TAG${i}\u0000`;
       if (!out.includes(token)) return; // denna tagg hör inte hemma på denna nivå
 
-      if (INLINE_ONLY_TAG_CLASSES.has(tag.className)) {
-        const replacement = `<span class="md-tag md-tag-${tag.className}">${tag.inner}</span>`;
+      const { baseClass } = parseTagClassName(tag.className);
+      const inline = isTagInline(tag.className);
+      const cssClass = `md-tag-${tag.className}`;
+
+      if (baseClass === RAW_BASE_CLASS) {
+        const rawSource = reconstructRawSource(tag.inner, tagBlocks);
+        const escaped = escapeHtml(rawSource);
+        const replacement = inline
+          ? `<span class="md-tag ${cssClass}">${escaped}</span>`
+          : `<div class="md-tag ${cssClass}">${escaped}</div>`;
+        out = replaceTagToken(out, token, replacement);
+        return;
+      }
+
+      if (baseClass === 'nyckelord') {
+        const replacement = `<span class="md-tag ${cssClass}">${tag.inner}</span>`;
         out = out.replace(token, replacement);
         return;
       }
 
-      const isSpelledare = tag.className === 'spelledare';
-      const isKonfidentiellt = tag.className === 'konfidentiellt';
+      const isSpelledare = baseClass === 'spelledare';
+      const isKonfidentiellt = baseClass === 'konfidentiellt';
       const isLockableTag = isSpelledare || isKonfidentiellt;
 
       const isUnlockedForThisTag = isSpelledare
@@ -138,19 +186,21 @@ function renderMarkdown(file) {
       let replacement;
 
       if (isLockableTag && !isUnlockedForThisTag) {
-        replacement = `<div class="md-tag md-tag-locked-notice">🔒 SL: Låst innehåll, lås upp för att visa.</div>`;
+        replacement = inline
+          ? `<span class="md-tag md-tag-locked-notice">🔒 SL</span>`
+          : `<div class="md-tag md-tag-locked-notice">🔒 SL: Låst innehåll, lås upp för att visa.</div>`;
       } else if (isKonfidentiellt) {
-        replacement = renderTagInner(tag.inner);
+        replacement = inline
+          ? resolveTagTokens(stripWrappingP(marked.parseInline(tag.inner, { renderer })))
+          : renderTagInner(tag.inner);
+      } else if (inline) {
+        const innerHtml = stripWrappingP(marked.parseInline(tag.inner, { renderer }));
+        replacement = `<span class="md-tag ${cssClass}">${resolveTagTokens(innerHtml)}</span>`;
       } else {
-        replacement = `<div class="md-tag md-tag-${tag.className}">${renderTagInner(tag.inner)}</div>`;
+        replacement = `<div class="md-tag ${cssClass}">${renderTagInner(tag.inner)}</div>`;
       }
 
-      const wrappedInP = new RegExp(`<p>\\s*${token}\\s*</p>`);
-      if (wrappedInP.test(out)) {
-        out = out.replace(wrappedInP, replacement);
-      } else {
-        out = out.replace(token, replacement);
-      }
+      out = replaceTagToken(out, token, replacement);
     });
     return out;
   }
@@ -158,6 +208,19 @@ function renderMarkdown(file) {
   html = resolveTagTokens(html);
 
   return html;
+}
+
+function replaceTagToken(html, token, replacement) {
+  const wrappedInP = new RegExp(`<p>\\s*${token}\\s*</p>`);
+  if (wrappedInP.test(html)) {
+    return html.replace(wrappedInP, replacement);
+  }
+  return html.replace(token, replacement);
+}
+
+function stripWrappingP(html) {
+  const match = /^<p>([\s\S]*)<\/p>\s*$/.exec(html.trim());
+  return match ? match[1] : html;
 }
 
 function resolveImageSrc(href, fromPath) {
